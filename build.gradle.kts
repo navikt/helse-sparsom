@@ -1,4 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+val mainClass = "no.nav.helse.sparsom.AppKt"
+
 val junitVersion = "5.9.0"
 val flywayCoreVersion = "9.1.6"
 val kotliqueryVersion = "1.9.0"
@@ -41,10 +44,30 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
+tasks {
+    test {
+        useJUnitPlatform()
+    }
+    withType<KotlinCompile> {
+        kotlinOptions.jvmTarget = "1.8"
+    }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    withType<Jar> {
+        archiveBaseName.set("app")
+
+        manifest {
+            attributes["Main-Class"] = mainClass
+            attributes["Class-Path"] = configurations.runtimeClasspath.get().joinToString(separator = " ") {
+                it.name
+            }
+        }
+
+        doLast {
+            configurations.runtimeClasspath.get().forEach {
+                val file = File("$buildDir/libs/${it.name}")
+                if (!file.exists())
+                    it.copyTo(file)
+            }
+        }
+    }
 }
