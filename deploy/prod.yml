@@ -24,8 +24,8 @@ spec:
       cpu: 50m
       memory: 512Mi
   replicas:
-    min: 24
-    max: 24
+    min: 12
+    max: 12
     cpuThresholdPercentage: 90
   prometheus:
     enabled: true
@@ -36,6 +36,7 @@ spec:
     sqlInstances:
       - type: POSTGRES_14
         diskAutoresize: true
+        tier: db-custom-1-3840
         pointInTimeRecovery: true
         databases:
           - name: sparsom
