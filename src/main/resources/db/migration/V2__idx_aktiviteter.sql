@@ -1,0 +1,1 @@
+CREATE INDEX idx_aktivitet ON aktivitet(level, melding, tidsstempel);
