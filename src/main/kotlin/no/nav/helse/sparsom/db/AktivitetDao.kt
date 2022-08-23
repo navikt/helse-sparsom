@@ -27,7 +27,7 @@ internal class AktivitetDao(private val dataSource: DataSource): AktivitetReposi
 
     private fun TransactionalSession.aktivitet(nivå: Nivå, melding: String, tidsstempel: LocalDateTime): Long {
         @Language("PostgreSQL")
-        val query = "INSERT INTO aktivitet (nivå, melding, tidsstempel) VALUES (CAST(? as NIVÅ), ?, ?)"
+        val query = "INSERT INTO aktivitet (level, melding, tidsstempel) VALUES (CAST(? as LEVEL), ?, ?)"
         return requireNotNull(run(queryOf(query, nivå.toString(), melding, tidsstempel).asUpdateAndReturnGeneratedKey))
     }
 

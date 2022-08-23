@@ -30,7 +30,7 @@ internal class DataSourceBuilder(env: Map<String, String>) {
         idleTimeout = Duration.ofMinutes(1).toMillis()
         maxLifetime = idleTimeout * 5
         initializationFailTimeout = Duration.ofMinutes(1).toMillis()
-        connectionTimeout = Duration.ofSeconds(5).toMillis()
+        connectionTimeout = Duration.ofSeconds(30).toMillis()
         leakDetectionThreshold = Duration.ofSeconds(10).toMillis()
         metricRegistry = PrometheusMeterRegistry(
             PrometheusConfig.DEFAULT,
