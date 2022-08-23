@@ -44,6 +44,7 @@ internal class DataSourceBuilder(env: Map<String, String>) {
         username = databaseUsername
         password = databasePassword
         initializationFailTimeout = Duration.ofMinutes(1).toMillis()
+        connectionTimeout = Duration.ofMinutes(1).toMillis()
         maximumPoolSize = 1
     }
 
