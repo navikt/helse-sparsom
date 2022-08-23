@@ -1,0 +1,1 @@
+CREATE INDEX idx_aktivitet_kontekst_aktivitet_ref ON aktivitet_kontekst(aktivitet_ref);
