@@ -6,6 +6,8 @@ val postgresqlVersion = "42.4.2"
 val hikariCPVersion = "5.0.1"
 val testcontainersPostgresqlVersion = "1.17.3"
 val mockkVersion = "1.12.5"
+val logbackClassicVersion = "1.2.11"
+val logstashVersion = "7.2"
 val rapidsAndRiversVersion = "2022072721371658950659.c1e8f7bf35c6"
 
 plugins {
@@ -25,6 +27,11 @@ dependencies {
     implementation("com.github.seratch:kotliquery:$kotliqueryVersion")
     implementation("org.postgresql:postgresql:$postgresqlVersion")
     implementation("com.zaxxer:HikariCP:$hikariCPVersion")
+    implementation("ch.qos.logback:logback-classic:$logbackClassicVersion")
+    implementation("net.logstash.logback:logstash-logback-encoder:$logstashVersion") {
+        exclude("com.fasterxml.jackson.core")
+        exclude("com.fasterxml.jackson.dataformat")
+    }
 
     api("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
 
