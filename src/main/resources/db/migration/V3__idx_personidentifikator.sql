@@ -1,0 +1,1 @@
+CREATE INDEX idx_personidentifikator ON hendelse(personidentifikator);
