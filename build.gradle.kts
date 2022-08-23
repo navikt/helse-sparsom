@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 val junitVersion = "5.9.0"
-val flywayCoreVersion = "9.0.4"
-val kotliqueryVersion = "1.8.0"
-val postgresqlVersion = "42.4.0"
+val flywayCoreVersion = "9.1.6"
+val kotliqueryVersion = "1.9.0"
+val postgresqlVersion = "42.4.2"
 val hikariCPVersion = "5.0.1"
 val testcontainersPostgresqlVersion = "1.17.3"
 val mockkVersion = "1.12.5"
