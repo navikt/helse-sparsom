@@ -38,8 +38,9 @@ class Kontekst(
     }
 }
 
-enum class Nivå(private val dbName: String) {
-    Info("INFO");
-
-    override fun toString() = dbName
+enum class Nivå {
+    INFO,
+    VARSEL,
+    FUNKSJONELL_FEIL,
+    LOGISK_FEIL;
 }

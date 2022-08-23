@@ -2,7 +2,7 @@ package no.nav.helse.sparsom.db
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.sparsom.Nivå.Info
+import no.nav.helse.sparsom.Nivå.INFO
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -26,7 +26,7 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
     @Test
     fun lagre() {
         val hendelseId = hendelseDao.lagre("12345678910", UUID.randomUUID(), "{}", LocalDateTime.now())
-        aktivitetDao.lagre(Info, "en melding", LocalDateTime.now(), hendelseId, listOf(Triple("Person", "fødselsnummer", "12345678910")))
+        aktivitetDao.lagre(INFO, "en melding", LocalDateTime.now(), hendelseId, listOf(Triple("Person", "fødselsnummer", "12345678910")))
         assertAntallRader(1, 1, 1)
     }
 
@@ -34,7 +34,7 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
     fun `lagre med flere kontekster`() {
         val hendelseId = hendelseDao.lagre("12345678910", UUID.randomUUID(), "{}", LocalDateTime.now())
         aktivitetDao.lagre(
-            Info,
+            INFO,
             "en melding",
             LocalDateTime.now(),
             hendelseId,
@@ -50,8 +50,8 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
     fun `ulike hendelser med samme kontekst`() {
         val hendelseId1 = hendelseDao.lagre("12345678910", UUID.randomUUID(), "{}", LocalDateTime.now())
         val hendelseId2 = hendelseDao.lagre("12345678910", UUID.randomUUID(), "{}", LocalDateTime.now())
-        aktivitetDao.lagre(Info, "en melding", LocalDateTime.now(), hendelseId1, listOf(Triple("Person", "fødselsnummer", "12345678910")))
-        aktivitetDao.lagre(Info, "en annen melding", LocalDateTime.now(), hendelseId2, listOf(Triple("Person", "fødselsnummer", "12345678910")))
+        aktivitetDao.lagre(INFO, "en melding", LocalDateTime.now(), hendelseId1, listOf(Triple("Person", "fødselsnummer", "12345678910")))
+        aktivitetDao.lagre(INFO, "en annen melding", LocalDateTime.now(), hendelseId2, listOf(Triple("Person", "fødselsnummer", "12345678910")))
         assertAntallRader(2, 1, 2)
     }
 

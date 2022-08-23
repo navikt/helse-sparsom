@@ -3,7 +3,7 @@
   "fødselsnummer": "12345678910",
   "aktiviteter": [
     {
-      "nivå": "Info",
+      "nivå": "INFO",
       "melding": "Behandler historiske utbetalinger og inntekter",
       "tidsstempel": "2022-08-22T16:17:40.559",
       "kontekster": [
@@ -26,7 +26,7 @@
       ]
     },
     {
-      "nivå": "Info",
+      "nivå": "INFO",
       "melding": "Mangler vilkårsgrunnlag for 2022-05-01",
       "tidsstempel": "2022-08-22T16:17:40.564",
       "kontekster": [
