@@ -17,9 +17,6 @@ plugins {
     kotlin("jvm") version "1.7.10"
 }
 
-group = "org.example"
-version = "1.0-SNAPSHOT"
-
 repositories {
     maven("https://jitpack.io")
     mavenCentral()
