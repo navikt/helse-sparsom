@@ -47,6 +47,28 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
     }
 
     @Test
+    fun duplikatkontroll() {
+        val hendelseId = hendelseDao.lagre("12345678910", UUID.randomUUID(), "{}", LocalDateTime.now())
+        val tidsstempel = LocalDateTime.now()
+        val vedtaksperiodeid = UUID.randomUUID()
+        aktivitetDao.lagre(INFO, "en melding", tidsstempel, hendelseId, listOf(
+                Triple("Person", "fødselsnummer", "12345678910"),
+                Triple("Vedtaksperiode", "vedtaksperiodeId", "$vedtaksperiodeid")
+            )
+        )
+        aktivitetDao.lagre(INFO, "en melding", tidsstempel, hendelseId, listOf(
+                Triple("Person", "fødselsnummer", "12345678910"),
+                Triple("Vedtaksperiode", "vedtaksperiodeId", "$vedtaksperiodeid")
+            )
+        )
+        assertAntallRader(
+            forventetAntallAktiviteter = 1,
+            forventetAntallKontekster = 2,
+            forventetAntallKoblinger = 2
+        )
+    }
+
+    @Test
     fun `ulike hendelser med samme kontekst`() {
         val hendelseId1 = hendelseDao.lagre("12345678910", UUID.randomUUID(), "{}", LocalDateTime.now())
         val hendelseId2 = hendelseDao.lagre("12345678910", UUID.randomUUID(), "{}", LocalDateTime.now())
@@ -55,10 +77,13 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
         assertAntallRader(2, 1, 2)
     }
 
-    private fun assertAntallRader(antallAktiviteter: Int, antallKontekster: Int, antallKoblinger: Int) {
-        assertEquals(antallAktiviteter, antallAktiviteter())
-        assertEquals(antallKontekster, antallKontekster())
-        assertEquals(antallKoblinger, antallKoblinger())
+    private fun assertAntallRader(forventetAntallAktiviteter: Int, forventetAntallKontekster: Int, forventetAntallKoblinger: Int) {
+        val faktiskAntallAktiviteter = antallAktiviteter()
+        val faktiskAntallKontekster = antallKontekster()
+        val faktiskAntallKoblinger = antallKoblinger()
+        assertEquals(forventetAntallAktiviteter, faktiskAntallAktiviteter) { "forventet antall aktiviteter: $forventetAntallAktiviteter, faktisk: $faktiskAntallAktiviteter" }
+        assertEquals(forventetAntallKontekster, faktiskAntallKontekster) { "forventet antall kontekster: $forventetAntallKontekster, faktisk: $faktiskAntallKontekster" }
+        assertEquals(forventetAntallKoblinger, faktiskAntallKoblinger) { "forventet antall koblinger: $forventetAntallKoblinger, faktisk: $faktiskAntallKoblinger" }
     }
 
     private fun antallAktiviteter() = sessionOf((dataSource)).use {

@@ -12,7 +12,8 @@ CREATE TABLE aktivitet(
     id BIGSERIAL NOT NULL PRIMARY KEY,
     level LEVEL NOT NULL,
     melding varchar NOT NULL,
-    tidsstempel timestamptz NOT NULL
+    tidsstempel timestamptz NOT NULL,
+    hash char(64) NOT NULL UNIQUE
 );
 
 CREATE TABLE kontekst(

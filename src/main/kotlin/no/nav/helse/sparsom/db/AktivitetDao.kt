@@ -4,6 +4,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.sparsom.Nivå
+import org.apache.commons.codec.digest.DigestUtils
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -18,17 +19,23 @@ internal class AktivitetDao(private val dataSource: DataSource): AktivitetReposi
     ) {
         sessionOf(dataSource, returnGeneratedKey = true).use { session ->
             session.transaction { tx ->
-                val aktivitetId = tx.aktivitet(nivå, melding, tidsstempel)
+                val hash = hash(nivå, melding, tidsstempel, kontekster)
+                val aktivitetId = tx.aktivitet(nivå, melding, tidsstempel, hash) ?: return@transaction
                 val kontekstIder = tx.kontekster(kontekster)
                 tx.koble(aktivitetId, kontekstIder, hendelseId)
             }
         }
     }
 
-    private fun TransactionalSession.aktivitet(nivå: Nivå, melding: String, tidsstempel: LocalDateTime): Long {
+    private fun hash(nivå: Nivå, melding: String, tidsstempel: LocalDateTime, kontekster: List<Triple<String, String, String>>): String {
+        val toDigest = "$nivå$melding$tidsstempel${kontekster.joinToString("") { "${it.first}${it.second}${it.third}" }}"
+        return DigestUtils.sha3_256Hex(toDigest)
+    }
+
+    private fun TransactionalSession.aktivitet(nivå: Nivå, melding: String, tidsstempel: LocalDateTime, hash: String): Long? {
         @Language("PostgreSQL")
-        val query = "INSERT INTO aktivitet (level, melding, tidsstempel) VALUES (CAST(? as LEVEL), ?, ?)"
-        return requireNotNull(run(queryOf(query, nivå.toString(), melding, tidsstempel).asUpdateAndReturnGeneratedKey))
+        val query = "INSERT INTO aktivitet (level, melding, tidsstempel, hash) VALUES (CAST(? as LEVEL), ?, ?, ?) ON CONFLICT (hash) DO NOTHING"
+        return run(queryOf(query, nivå.toString(), melding, tidsstempel, hash).asUpdateAndReturnGeneratedKey)
     }
 
     private fun TransactionalSession.kontekster(kontekster: List<Triple<String, String, String>>): List<Long> {
