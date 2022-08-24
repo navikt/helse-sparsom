@@ -13,13 +13,16 @@ fun main() {
 
 private fun createApp(env: Map<String, String>): RapidsConnection {
     val dataSourceBuilder = DataSourceBuilder(env)
-    dataSourceBuilder.migrate()
     val dataSource = dataSourceBuilder.getDataSource()
 
     return RapidApplication.create(env).apply {
         val aktivitetFactory = AktivitetFactory(AktivitetDao(dataSource))
         AktivitetRiver(this, HendelseDao(dataSource), aktivitetFactory)
         register(object : RapidsConnection.StatusListener {
+            override fun onStartup(rapidsConnection: RapidsConnection) {
+                dataSourceBuilder.migrate()
+            }
+
             override fun onShutdown(rapidsConnection: RapidsConnection) {
                 dataSource.close()
             }
