@@ -3,13 +3,18 @@ package no.nav.helse.sparsom.db
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.sparsom.Nivå
 import org.apache.commons.codec.digest.DigestUtils
 import org.intellij.lang.annotations.Language
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
 internal class AktivitetDao(private val dataSource: () -> DataSource): AktivitetRepository {
+    private companion object {
+        private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
+    }
     override fun lagre(
         nivå: Nivå,
         melding: String,
@@ -20,7 +25,18 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
         sessionOf(dataSource(), returnGeneratedKey = true).use { session ->
             session.transaction { tx ->
                 val hash = hash(nivå, melding, tidsstempel, kontekster)
-                val aktivitetId = tx.aktivitet(nivå, melding, tidsstempel, hash) ?: return@transaction
+                val aktivitetId = tx.aktivitet(nivå, melding, tidsstempel, hash) ?: kotlin.run {
+                    sikkerlogg.info(
+                        "Oppdaget kollisjon med {} for melding {}, {}, {} og {}. {}",
+                        keyValue("hash", hash),
+                        keyValue("nivå", nivå),
+                        keyValue("melding", melding),
+                        keyValue("tidsstempel", tidsstempel),
+                        keyValue("hendelseId", hendelseId),
+                        keyValue("Kontekster", kontekster)
+                    )
+                    return@transaction
+                }
                 val kontekstIder = tx.kontekster(kontekster)
                 tx.koble(aktivitetId, kontekstIder, hendelseId)
             }
