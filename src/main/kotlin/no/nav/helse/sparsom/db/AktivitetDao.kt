@@ -9,7 +9,7 @@ import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
-internal class AktivitetDao(private val dataSource: DataSource): AktivitetRepository {
+internal class AktivitetDao(private val dataSource: () -> DataSource): AktivitetRepository {
     override fun lagre(
         nivå: Nivå,
         melding: String,
@@ -17,7 +17,7 @@ internal class AktivitetDao(private val dataSource: DataSource): AktivitetReposi
         hendelseId: Long,
         kontekster: List<Triple<String, String, String>>
     ) {
-        sessionOf(dataSource, returnGeneratedKey = true).use { session ->
+        sessionOf(dataSource(), returnGeneratedKey = true).use { session ->
             session.transaction { tx ->
                 val hash = hash(nivå, melding, tidsstempel, kontekster)
                 val aktivitetId = tx.aktivitet(nivå, melding, tidsstempel, hash) ?: return@transaction

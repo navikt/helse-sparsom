@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 internal class HendelseDaoTest: AbstractDatabaseTest() {
-    private val dao = HendelseDao(dataSource)
+    private val dao = HendelseDao { dataSource }
 
     @Test
     fun lagre() {

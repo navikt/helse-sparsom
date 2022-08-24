@@ -8,9 +8,9 @@ import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
 
-class HendelseDao(private val dataSource: DataSource): HendelseRepository {
+class HendelseDao(private val dataSource: () -> DataSource): HendelseRepository {
     override fun lagre(fødselsnummer: String, hendelseId: UUID, json: String, tidsstempel: LocalDateTime): Long {
-        return sessionOf(dataSource, returnGeneratedKey = true).use { session ->
+        return sessionOf(dataSource(), returnGeneratedKey = true).use { session ->
             session.transaction { tx ->
                 tx.lagreHendelse(fødselsnummer, hendelseId, json, tidsstempel) ?: tx.finnHendelse(hendelseId)
             }
