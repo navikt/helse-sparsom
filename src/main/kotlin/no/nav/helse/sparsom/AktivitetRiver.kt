@@ -1,8 +1,10 @@
 package no.nav.helse.sparsom
 
 import com.fasterxml.jackson.databind.JsonNode
+import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.*
 import no.nav.helse.sparsom.db.HendelseRepository
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
 
@@ -11,6 +13,9 @@ internal class AktivitetRiver(
     private val hendelseRepository: HendelseRepository,
     private val aktivitetFactory: AktivitetFactory
 ): River.PacketListener {
+    private companion object {
+        private val logger = LoggerFactory.getLogger(AktivitetRiver::class.java)
+    }
     init {
         River(rapidsConnection).apply {
             validate {
@@ -30,6 +35,7 @@ internal class AktivitetRiver(
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         val fødselsnummer = packet["fødselsnummer"].asText()
         val hendelseId = UUID.fromString(packet["@id"].asText())
+        logger.info("lagrer aktiviteter fra hendelse {}", keyValue("meldingsreferanseId", hendelseId))
         val tidsstempel = LocalDateTime.parse(packet["@opprettet"].asText())
         val id = hendelseRepository.lagre(fødselsnummer, hendelseId, packet.toJson(), tidsstempel)
         val aktiviteter = packet["aktiviteter"].takeUnless(JsonNode::isMissingOrNull) ?: emptyList()
