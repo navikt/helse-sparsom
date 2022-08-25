@@ -37,8 +37,8 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
                     )
                     return@transaction
                 }
-                val kontekstIder = tx.kontekster(kontekster)
-                tx.koble(aktivitetId, kontekstIder, hendelseId)
+                tx.kontekster(kontekster)
+                tx.koble(aktivitetId, kontekster, hendelseId)
             }
         }
     }
@@ -54,29 +54,15 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
         return run(queryOf(query, nivå.toString(), melding, tidsstempel, hash).asUpdateAndReturnGeneratedKey)
     }
 
-    private fun TransactionalSession.kontekster(kontekster: List<Triple<String, String, String>>): List<Long> {
-        return kontekster.map { (type, identifikatornavn, identifikator) ->
-            lagreKontekst(type, identifikatornavn, identifikator) ?: finnKontekst(type, identifikatornavn, identifikator)
-        }
-    }
-
-    private fun TransactionalSession.lagreKontekst(type: String, identifikatornavn: String, identifikator: String): Long? {
+    private fun TransactionalSession.kontekster(kontekster: List<Triple<String, String, String>>) {
         @Language("PostgreSQL")
-        val query = "INSERT INTO kontekst (type, identifikatornavn, identifikator) VALUES (?, ?, ?) ON CONFLICT(type, identifikatornavn, identifikator) DO NOTHING"
-        return run(queryOf(query, type, identifikatornavn, identifikator).asUpdateAndReturnGeneratedKey)
+        val query = "INSERT INTO kontekst (type, identifikatornavn, identifikator) VALUES ${kontekster.joinToString { "(?, ?, ?)" }} ON CONFLICT(type, identifikatornavn, identifikator) DO NOTHING"
+        run(queryOf(query, *kontekster.flatMap { it.toList() }.toTypedArray()).asExecute)
     }
 
-    private fun TransactionalSession.finnKontekst(type: String, identifikatornavn: String, identifikator: String): Long {
+    private fun TransactionalSession.koble(aktivitetId: Long, kontekster: List<Triple<String, String, String>>, hendelseId: Long) {
         @Language("PostgreSQL")
-        val query = "SELECT id FROM kontekst WHERE type = ? AND identifikatornavn = ? AND identifikator = ?"
-        return requireNotNull(run(queryOf(query, type, identifikatornavn, identifikator).map { it.long(1) }.asSingle))
-    }
-
-    private fun TransactionalSession.koble(aktivitetId: Long, kontekstIder: List<Long>, hendelseId: Long) {
-        kontekstIder.forEach {kontekstId ->
-            @Language("PostgreSQL")
-            val query = "INSERT INTO aktivitet_kontekst (aktivitet_ref, kontekst_ref, hendelse_ref) VALUES (?, ?, ?)"
-            run(queryOf(query, aktivitetId, kontekstId, hendelseId).asExecute)
-        }
+        val query = "INSERT INTO aktivitet_kontekst (aktivitet_ref, kontekst_ref, hendelse_ref) VALUES ${kontekster.joinToString { "('$aktivitetId', (SELECT id FROM kontekst WHERE type=? AND identifikatornavn=? AND identifikator=?), '$hendelseId')" }}"
+        run(queryOf(query, *kontekster.flatMap { it.toList() }.toTypedArray()).asExecute)
     }
 }
