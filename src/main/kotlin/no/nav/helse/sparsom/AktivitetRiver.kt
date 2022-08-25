@@ -7,6 +7,7 @@ import no.nav.helse.sparsom.db.HendelseRepository
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.system.measureTimeMillis
 
 internal class AktivitetRiver(
     rapidsConnection: RapidsConnection,
@@ -35,10 +36,12 @@ internal class AktivitetRiver(
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         val fødselsnummer = packet["fødselsnummer"].asText()
         val hendelseId = UUID.fromString(packet["@id"].asText())
-        logger.info("lagrer aktiviteter fra hendelse {}", keyValue("meldingsreferanseId", hendelseId))
         val tidsstempel = LocalDateTime.parse(packet["@opprettet"].asText())
-        val id = hendelseRepository.lagre(fødselsnummer, hendelseId, packet.toJson(), tidsstempel)
-        val aktiviteter = packet["aktiviteter"].takeUnless(JsonNode::isMissingOrNull) ?: emptyList()
-        aktivitetFactory.aktiviteter(aktiviteter, id)
+        val tidBrukt = measureTimeMillis {
+            val id = hendelseRepository.lagre(fødselsnummer, hendelseId, packet.toJson(), tidsstempel)
+            val aktiviteter = packet["aktiviteter"].takeUnless(JsonNode::isMissingOrNull) ?: emptyList()
+            aktivitetFactory.aktiviteter(aktiviteter, id)
+        }
+        logger.info("lagrer aktiviteter fra hendelse {}. Tid brukt: ${tidBrukt}ms", keyValue("meldingsreferanseId", hendelseId))
     }
 }
