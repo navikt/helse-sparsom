@@ -10,10 +10,12 @@ import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import javax.sql.DataSource
+import kotlin.system.measureTimeMillis
 
 internal class AktivitetDao(private val dataSource: () -> DataSource): AktivitetRepository {
     private companion object {
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
+        private val logg = LoggerFactory.getLogger(AktivitetDao::class.java)
     }
     override fun lagre(
         nivå: Nivå,
@@ -38,7 +40,10 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
                     return@transaction
                 }
                 val kontekstIder = tx.kontekster(kontekster)
-                tx.koble(aktivitetId, kontekstIder, hendelseId)
+                val tidBruktKobling = measureTimeMillis {
+                    tx.koble(aktivitetId, kontekstIder, hendelseId)
+                }
+                logg.info("Det tok ${tidBruktKobling}ms å inserte koblinger for {}", keyValue("aktivitetId", aktivitetId))
             }
         }
     }
