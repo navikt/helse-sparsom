@@ -36,7 +36,7 @@ spec:
     sqlInstances:
       - type: POSTGRES_14
         diskAutoresize: true
-        tier: db-custom-1-3840
+        tier: db-custom-2-4096
         pointInTimeRecovery: true
         databases:
           - name: sparsom
