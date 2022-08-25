@@ -50,3 +50,5 @@ spec:
       value: tbd-sparsom-v1
     - name: KAFKA_RESET_POLICY
       value: earliest
+    - name: KAFKA_MAX_RECORDS
+      value: 10
