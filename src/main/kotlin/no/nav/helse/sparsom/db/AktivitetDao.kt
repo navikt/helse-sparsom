@@ -11,12 +11,15 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import javax.sql.DataSource
 import kotlin.system.measureTimeMillis
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTimedValue
 
 internal class AktivitetDao(private val dataSource: () -> DataSource): AktivitetRepository {
     private companion object {
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
         private val logg = LoggerFactory.getLogger(AktivitetDao::class.java)
     }
+    @OptIn(ExperimentalTime::class)
     override fun lagre(
         nivå: Nivå,
         melding: String,
@@ -26,7 +29,10 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
     ) {
         sessionOf(dataSource(), returnGeneratedKey = true).use { session ->
             session.transaction { tx ->
-                val hash = hash(nivå, melding, tidsstempel, kontekster)
+                val (hash, tidBruktHashing) = measureTimedValue {
+                    hash(nivå, melding, tidsstempel, kontekster)
+                }
+                logg.info("Det tok ${tidBruktHashing.inWholeMilliseconds}ms å hashe")
                 val aktivitetId = tx.aktivitet(nivå, melding, tidsstempel, hash) ?: kotlin.run {
                     sikkerlogg.info(
                         "Oppdaget kollisjon med {} for melding {}, {}, {} og {}. {}",
@@ -39,10 +45,11 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
                     )
                     return@transaction
                 }
-                val kontekstIder = tx.kontekster(kontekster)
+                val (kontekstIder, tidBruktKontekster) = measureTimedValue { tx.kontekster(kontekster) }
                 val tidBruktKobling = measureTimeMillis {
                     tx.koble(aktivitetId, kontekstIder, hendelseId)
                 }
+                logg.info("Det tok ${tidBruktKontekster}ms å inserte kontekster for {}", keyValue("aktivitetId", aktivitetId))
                 logg.info("Det tok ${tidBruktKobling}ms å inserte koblinger for {}", keyValue("aktivitetId", aktivitetId))
             }
         }
@@ -53,10 +60,15 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
         return DigestUtils.sha3_256Hex(toDigest)
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun TransactionalSession.aktivitet(nivå: Nivå, melding: String, tidsstempel: LocalDateTime, hash: String): Long? {
-        @Language("PostgreSQL")
-        val query = "INSERT INTO aktivitet (level, melding, tidsstempel, hash) VALUES (CAST(? as LEVEL), ?, ?, ?) ON CONFLICT (hash) DO NOTHING"
-        return run(queryOf(query, nivå.toString(), melding, tidsstempel, hash).asUpdateAndReturnGeneratedKey)
+        val (id, tidBrukt) = measureTimedValue {
+            @Language("PostgreSQL")
+            val query = "INSERT INTO aktivitet (level, melding, tidsstempel, hash) VALUES (CAST(? as LEVEL), ?, ?, ?) ON CONFLICT (hash) DO NOTHING"
+            run(queryOf(query, nivå.toString(), melding, tidsstempel, hash).asUpdateAndReturnGeneratedKey)
+        }
+        logg.info("Det tok ${tidBrukt}ms å inserte aktivitet for {}", keyValue("aktivitetId", id))
+        return id
     }
 
     private fun TransactionalSession.kontekster(kontekster: List<Triple<String, String, String>>): List<Long> {
