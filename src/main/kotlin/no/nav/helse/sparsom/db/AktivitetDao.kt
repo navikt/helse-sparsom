@@ -49,7 +49,7 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
                 val tidBruktKobling = measureTimeMillis {
                     tx.koble(aktivitetId, kontekstIder, hendelseId)
                 }
-                logg.info("Det tok ${tidBruktKontekster}ms å inserte kontekster for {}", keyValue("aktivitetId", aktivitetId))
+                logg.info("Det tok ${tidBruktKontekster.inWholeMilliseconds}ms å inserte kontekster for {}", keyValue("aktivitetId", aktivitetId))
                 logg.info("Det tok ${tidBruktKobling}ms å inserte koblinger for {}", keyValue("aktivitetId", aktivitetId))
             }
         }
@@ -67,7 +67,7 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
             val query = "INSERT INTO aktivitet (level, melding, tidsstempel, hash) VALUES (CAST(? as LEVEL), ?, ?, ?) ON CONFLICT (hash) DO NOTHING"
             run(queryOf(query, nivå.toString(), melding, tidsstempel, hash).asUpdateAndReturnGeneratedKey)
         }
-        logg.info("Det tok ${tidBrukt}ms å inserte aktivitet for {}", keyValue("aktivitetId", id))
+        logg.info("Det tok ${tidBrukt.inWholeMilliseconds}ms å inserte aktivitet for {}", keyValue("aktivitetId", id))
         return id
     }
 
