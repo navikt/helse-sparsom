@@ -37,7 +37,9 @@ abstract class AbstractDatabaseTest {
             Flyway.configure()
                 .dataSource(dataSource)
                 .failOnMissingLocations(true)
+                .cleanDisabled(false)
                 .load()
+                .also { it.clean() }
                 .migrate()
 
             createTruncateFunction(dataSource)

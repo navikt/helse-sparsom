@@ -40,11 +40,11 @@ internal class Aktivitet(
         private val tidsstempel: LocalDateTime,
         private val hash: String
     ) {
-        private fun stringify(): List<String> {
-            return listOf(nivå.toString(), melding, tidsstempel.toString(), hash)
+        private fun stringify(hendelseId: Long): List<String> {
+            return listOf(hendelseId.toString(), nivå.toString(), melding, tidsstempel.toString(), hash)
         }
         internal companion object {
-            fun List<AktivitetDTO>.stringify() = flatMap { it.stringify() }
+            fun List<AktivitetDTO>.stringify(hendelseId: Long) = flatMap { it.stringify(hendelseId) }
         }
     }
 }
@@ -81,7 +81,7 @@ internal class Kontekst(
         internal companion object {
             fun List<KontekstDTO>.filtrerHarHash(hasher: List<String>) = filter { kontekst -> kontekst.hash in hasher.map { it.trimEnd() } }
             fun Set<KontekstDTO>.stringify() = flatMap { it.stringify() }
-            fun Set<KontekstDTO>.stringifyForKobling() = flatMap { listOf(it.hash) + it.stringify() + listOf(it.hendelseId) }
+            fun Set<KontekstDTO>.stringifyForKobling() = flatMap { listOf(it.hash) + it.stringify() }
         }
     }
 }

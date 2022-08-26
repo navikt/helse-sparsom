@@ -26,7 +26,7 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
         sessionOf(dataSource()).use { session ->
             session.transaction { tx ->
                 val (lagredeHasher, tidBruktLagreAktiviteter) = measureTimedValue {
-                    tx.lagreAktiviteter(aktiviteter)
+                    tx.lagreAktiviteter(aktiviteter, hendelseId)
                 }
                 sikkerlogg.info("Tid brukt på insert av ${lagredeHasher.size} aktiviteter: ${tidBruktLagreAktiviteter.inWholeMilliseconds}")
                 val konteksterSomSkalLagres = kontekster.filtrerHarHash(lagredeHasher).toSet()
@@ -43,10 +43,10 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
         }
     }
 
-    private fun TransactionalSession.lagreAktiviteter(aktiviteter: List<Aktivitet.AktivitetDTO>): List<String> {
+    private fun TransactionalSession.lagreAktiviteter(aktiviteter: List<Aktivitet.AktivitetDTO>, hendelseId: Long): List<String> {
         @Language("PostgreSQL")
-        val query = "INSERT INTO aktivitet(level, melding, tidsstempel, hash) VALUES ${aktiviteter.joinToString { "(CAST(? as LEVEL), ?, CAST(? as timestamptz), ?)" }} ON CONFLICT (hash) DO NOTHING RETURNING(hash)"
-        return run(queryOf(query, *aktiviteter.stringify().toTypedArray()).map { it.string(1) }.asList)
+        val query = "INSERT INTO aktivitet(hendelse_id, level, melding, tidsstempel, hash) VALUES ${aktiviteter.joinToString { "(?::BIGINT, CAST(? as LEVEL), ?, CAST(? as timestamptz), ?)" }} ON CONFLICT (hash) DO NOTHING RETURNING(hash)"
+        return run(queryOf(query, *aktiviteter.stringify(hendelseId).toTypedArray()).map { it.string(1) }.asList)
     }
 
     private fun TransactionalSession.lagreKontekster(kontekster: Set<Kontekst.KontekstDTO>) {
@@ -57,7 +57,11 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
 
     private fun TransactionalSession.lagreKoblinger(kontekster: Set<Kontekst.KontekstDTO>): Int {
         @Language("PostgreSQL")
-        val query = "INSERT INTO aktivitet_kontekst (aktivitet_ref, kontekst_ref, hendelse_ref) VALUES ${kontekster.joinToString { "((SELECT id FROM aktivitet WHERE hash=?), (SELECT id FROM kontekst WHERE type=? AND identifikatornavn=? AND identifikator=?), ?)" }}"
+        val query = """
+                INSERT INTO aktivitet_kontekst (aktivitet_id, kontekst_id)
+                SELECT a.id, k.id FROM kontekst k, aktivitet a
+                WHERE ${kontekster.joinToString(separator = " OR ") { "(a.hash=? AND k.type=? AND k.identifikatornavn=? AND k.identifikator=?)" }}
+        """
         return run(queryOf(query, *kontekster.stringifyForKobling().toTypedArray()).asUpdate)
     }
 

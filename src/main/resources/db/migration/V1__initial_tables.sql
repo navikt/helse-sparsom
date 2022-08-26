@@ -10,6 +10,7 @@ CREATE TABLE hendelse(
 
 CREATE TABLE aktivitet(
     id BIGSERIAL NOT NULL PRIMARY KEY,
+    hendelse_id BIGINT NOT NULL REFERENCES hendelse(id),
     level LEVEL NOT NULL,
     melding varchar NOT NULL,
     tidsstempel timestamptz NOT NULL,
@@ -25,8 +26,10 @@ CREATE TABLE kontekst(
 );
 
 CREATE TABLE aktivitet_kontekst(
-    id BIGSERIAL NOT NULL PRIMARY KEY,
-    aktivitet_ref BIGINT NOT NULL REFERENCES aktivitet(id),
-    kontekst_ref BIGINT NOT NULL REFERENCES kontekst(id),
-    hendelse_ref BIGINT NOT NULL REFERENCES hendelse(id)
+    aktivitet_id BIGINT NOT NULL REFERENCES aktivitet(id),
+    kontekst_id BIGINT NOT NULL REFERENCES kontekst(id),
+    PRIMARY KEY (aktivitet_id, kontekst_id)
 );
+
+CREATE INDEX idx_aktivitet ON aktivitet(level, melding, tidsstempel);
+CREATE INDEX idx_personidentifikator ON hendelse(personidentifikator);
