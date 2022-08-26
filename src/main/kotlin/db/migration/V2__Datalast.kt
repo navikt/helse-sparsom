@@ -18,7 +18,7 @@ internal class V2__Datalast : BaseJavaMigration() {
     private val env = System.getenv()
     private val config by lazy {
         HikariConfig().apply {
-            jdbcUrl = env["DATABASE_SPARSOM_URL"]
+            jdbcUrl = String.format("jdbc:postgresql://%s:%s/%s", env["DATABASE_SPARSOM_HOST"], env["DATABASE_SPARSOM_PORT"], env["DATABASE_SPARSOM_DATABASE"])
             username = env["DATABASE_SPARSOM_USERNAME"]
             password = env["DATABASE_SPARSOM_PASSWORD"]
             initializationFailTimeout = Duration.ofMinutes(1).toMillis()
@@ -29,7 +29,7 @@ internal class V2__Datalast : BaseJavaMigration() {
     private val spleisDataSource by lazy { HikariDataSource(config) }
 
     override fun migrate(context: Context) {
-        if (config.jdbcUrl.isNullOrBlank()) return log.info("Kjører _IKKE_ migrering fordi jdbc ikke er satt. Mangler konfig?")
+        if (config.username.isNullOrBlank()) return log.info("Kjører _IKKE_ migrering fordi jdbc ikke er satt. Mangler konfig?")
         log.info("Kjører i gang migrering")
         spleisDataSource.use { ds ->
             ds.connection.autoCommit = false
