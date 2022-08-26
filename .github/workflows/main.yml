@@ -50,7 +50,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --all-projects --org=tbd-ty7 --fail-on=all --configuration-matching='^runtimeClasspath'
+          args: --project-name=sparsom --org=tbd-ty7 --fail-on=all
           command: monitor
 
   deployDev:
