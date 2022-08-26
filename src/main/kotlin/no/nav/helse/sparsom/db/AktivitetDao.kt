@@ -34,11 +34,11 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
                 val tidBruktLagreKontekster = measureTimeMillis {
                     tx.lagreKontekster(konteksterSomSkalLagres)
                 }
-                val tidBruktLagreKoblinger = measureTimeMillis {
+                val (antallKoblingerLagret, tidBruktLagreKoblinger) = measureTimedValue {
                     tx.lagreKoblinger(konteksterSomSkalLagres)
                 }
                 sikkerlogg.info("Tid brukt på insert av ${konteksterSomSkalLagres.size} kontekster: $tidBruktLagreKontekster")
-                sikkerlogg.info("Tid brukt på insert av koblinger: $tidBruktLagreKoblinger")
+                sikkerlogg.info("Tid brukt på insert av $antallKoblingerLagret koblinger: $tidBruktLagreKoblinger")
             }
         }
     }
@@ -55,10 +55,10 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
         run(queryOf(query, *kontekster.stringify().toTypedArray()).asUpdate)
     }
 
-    private fun TransactionalSession.lagreKoblinger(kontekster: Set<Kontekst.KontekstDTO>) {
+    private fun TransactionalSession.lagreKoblinger(kontekster: Set<Kontekst.KontekstDTO>): Int {
         @Language("PostgreSQL")
         val query = "INSERT INTO aktivitet_kontekst (aktivitet_ref, kontekst_ref, hendelse_ref) VALUES ${kontekster.joinToString { "((SELECT id FROM aktivitet WHERE hash=?), (SELECT id FROM kontekst WHERE type=? AND identifikatornavn=? AND identifikator=?), ?)" }}"
-        run(queryOf(query, *kontekster.stringifyForKobling().toTypedArray()).asExecute)
+        return run(queryOf(query, *kontekster.stringifyForKobling().toTypedArray()).asUpdate)
     }
 
 }
