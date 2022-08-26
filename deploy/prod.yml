@@ -37,7 +37,7 @@ spec:
       - type: POSTGRES_14
         diskAutoresize: true
         tier: db-custom-8-16384
-        pointInTimeRecovery: true
+        pointInTimeRecovery: false
         databases:
           - name: sparsom
             envVarPrefix: DATABASE
