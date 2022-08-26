@@ -57,12 +57,7 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
 
     private fun TransactionalSession.lagreKoblinger(kontekster: Set<Kontekst.KontekstDTO>): Int {
         @Language("PostgreSQL")
-        val query = """
-                INSERT INTO aktivitet_kontekst (aktivitet_id, kontekst_id)
-                SELECT a.id, k.id FROM kontekst k, aktivitet a
-                WHERE ${kontekster.joinToString(separator = " OR ") { "(a.hash=? AND k.type=? AND k.identifikatornavn=? AND k.identifikator=?)" }}
-        """
+        val query = "INSERT INTO aktivitet_kontekst (aktivitet_id, kontekst_id) VALUES ${kontekster.joinToString { "((SELECT id FROM aktivitet WHERE hash=? LIMIT 1), (SELECT id FROM kontekst WHERE type=? AND identifikatornavn=? AND identifikator=? LIMIT 1))" }}"
         return run(queryOf(query, *kontekster.stringifyForKobling().toTypedArray()).asUpdate)
     }
-
 }
