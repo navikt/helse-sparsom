@@ -28,7 +28,7 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
                 val (lagredeHasher, tidBruktLagreAktiviteter) = measureTimedValue {
                     tx.lagreAktiviteter(aktiviteter)
                 }
-                sikkerlogg.info("Tid brukt på insert av ${lagredeHasher.size} aktiviteter: $tidBruktLagreAktiviteter")
+                sikkerlogg.info("Tid brukt på insert av ${lagredeHasher.size} aktiviteter: ${tidBruktLagreAktiviteter.inWholeMilliseconds}")
                 val konteksterSomSkalLagres = kontekster.filtrerHarHash(lagredeHasher).toSet()
                 if (konteksterSomSkalLagres.isEmpty()) return@transaction
                 val tidBruktLagreKontekster = measureTimeMillis {
@@ -37,7 +37,7 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
                 val tidBruktLagreKoblinger = measureTimeMillis {
                     tx.lagreKoblinger(konteksterSomSkalLagres)
                 }
-                sikkerlogg.info("Tid brukt på insert av $konteksterSomSkalLagres kontekster: $tidBruktLagreKontekster")
+                sikkerlogg.info("Tid brukt på insert av ${konteksterSomSkalLagres.size} kontekster: $tidBruktLagreKontekster")
                 sikkerlogg.info("Tid brukt på insert av koblinger: $tidBruktLagreKoblinger")
             }
         }
