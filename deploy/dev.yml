@@ -32,6 +32,8 @@ spec:
     path: /metrics
   kafka:
     pool: nav-dev
+  envFrom:
+    - secret: google-sql-spleis
   gcp:
     sqlInstances:
       - type: POSTGRES_14
