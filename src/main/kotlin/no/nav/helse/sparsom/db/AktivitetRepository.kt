@@ -1,14 +1,12 @@
 package no.nav.helse.sparsom.db
 
-import no.nav.helse.sparsom.Nivå
-import java.time.LocalDateTime
+import no.nav.helse.sparsom.Aktivitet
+import no.nav.helse.sparsom.Kontekst
 
-interface AktivitetRepository {
+internal interface AktivitetRepository {
     fun lagre(
-        nivå: Nivå,
-        melding: String,
-        tidsstempel: LocalDateTime,
-        hendelseId: Long,
-        kontekster: List<Triple<String, String, String>>
+        aktiviteter: List<Aktivitet.AktivitetDTO>,
+        kontekster: List<Kontekst.KontekstDTO>,
+        hendelseId: Long
     )
 }
