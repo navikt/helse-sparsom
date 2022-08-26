@@ -18,7 +18,12 @@ internal class V2__Datalast : BaseJavaMigration() {
     private val env = System.getenv()
     private val config by lazy {
         HikariConfig().apply {
-            jdbcUrl = String.format("jdbc:postgresql://%s:%s/%s", env["DATABASE_SPARSOM_HOST"], env["DATABASE_SPARSOM_PORT"], env["DATABASE_SPARSOM_DATABASE"])
+            jdbcUrl = String.format(
+                "jdbc:postgresql:///%s?%s&%s",
+                env["DATABASE_SPARSOM_DATABASE"],
+                "cloudSqlInstance=${env["GCP_TEAM_PROJECT_ID"]}:${env["DATABASE_SPARSOM_REGION"]}:${env["DATABASE_SPARSOM_INSTANCE"]}",
+                "socketFactory=com.google.cloud.sql.postgres.SocketFactory"
+            )
             username = env["DATABASE_SPARSOM_USERNAME"]
             password = env["DATABASE_SPARSOM_PASSWORD"]
             initializationFailTimeout = Duration.ofMinutes(1).toMillis()
