@@ -1,12 +1,16 @@
 package no.nav.helse.sparsom
 
 import com.fasterxml.jackson.databind.JsonNode
+import kotliquery.queryOf
+import kotliquery.sessionOf
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.*
 import no.nav.helse.sparsom.db.HendelseRepository
+import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
+import javax.sql.DataSource
 import kotlin.system.measureTimeMillis
 
 internal class AktivitetRiver(

@@ -25,7 +25,7 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
         sessionOf(dataSource(), returnGeneratedKey = true).use { session ->
             session.transaction { tx ->
                 val hash = hash(nivå, melding, tidsstempel, kontekster)
-                val aktivitetId = tx.aktivitet(nivå, melding, tidsstempel, hash) ?: kotlin.run {
+                val aktivitetId = tx.aktivitet(hendelseId, nivå, melding, tidsstempel, hash) ?: kotlin.run {
                     sikkerlogg.info(
                         "Oppdaget kollisjon med {} for melding {}, {}, {} og {}. {}",
                         keyValue("hash", hash),
@@ -38,7 +38,7 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
                     return@transaction
                 }
                 tx.kontekster(kontekster)
-                tx.koble(aktivitetId, kontekster, hendelseId)
+                tx.koble(aktivitetId, kontekster)
             }
         }
     }
@@ -48,10 +48,10 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
         return DigestUtils.sha3_256Hex(toDigest)
     }
 
-    private fun TransactionalSession.aktivitet(nivå: Nivå, melding: String, tidsstempel: LocalDateTime, hash: String): Long? {
+    private fun TransactionalSession.aktivitet(hendelseId: Long, nivå: Nivå, melding: String, tidsstempel: LocalDateTime, hash: String): Long? {
         @Language("PostgreSQL")
-        val query = "INSERT INTO aktivitet (level, melding, tidsstempel, hash) VALUES (CAST(? as LEVEL), ?, ?, ?) ON CONFLICT (hash) DO NOTHING"
-        return run(queryOf(query, nivå.toString(), melding, tidsstempel, hash).asUpdateAndReturnGeneratedKey)
+        val query = "INSERT INTO aktivitet (hendelse_id, level, melding, tidsstempel, hash) VALUES (?, CAST(? as LEVEL), ?, ?, ?) ON CONFLICT (hash) DO NOTHING"
+        return run(queryOf(query, hendelseId, nivå.toString(), melding, tidsstempel, hash).asUpdateAndReturnGeneratedKey)
     }
 
     private fun TransactionalSession.kontekster(kontekster: List<Triple<String, String, String>>) {
@@ -60,9 +60,13 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
         run(queryOf(query, *kontekster.flatMap { it.toList() }.toTypedArray()).asExecute)
     }
 
-    private fun TransactionalSession.koble(aktivitetId: Long, kontekster: List<Triple<String, String, String>>, hendelseId: Long) {
+    private fun TransactionalSession.koble(aktivitetId: Long, kontekster: List<Triple<String, String, String>>) {
         @Language("PostgreSQL")
-        val query = "INSERT INTO aktivitet_kontekst (aktivitet_ref, kontekst_ref, hendelse_ref) VALUES ${kontekster.joinToString { "('$aktivitetId', (SELECT id FROM kontekst WHERE type=? AND identifikatornavn=? AND identifikator=?), '$hendelseId')" }}"
-        run(queryOf(query, *kontekster.flatMap { it.toList() }.toTypedArray()).asExecute)
+        val query = """
+                INSERT INTO aktivitet_kontekst (aktivitet_id, kontekst_id)
+                SELECT ?, id FROM kontekst WHERE ${kontekster.joinToString(separator = " OR ") { "(type=? AND identifikatornavn=? AND identifikator=?)" }}
+        """
+
+        run(queryOf(query, *(listOf(aktivitetId) + kontekster.flatMap { it.toList() }).toTypedArray()).asExecute)
     }
 }
