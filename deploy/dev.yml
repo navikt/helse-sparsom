@@ -33,7 +33,7 @@ spec:
   kafka:
     pool: nav-dev
   envFrom:
-    - secret: google-sql-spleis
+    - secret: google-sql-helse-spleis-spleis-sparsom-9544ddd9
   gcp:
     sqlInstances:
       - type: POSTGRES_14
