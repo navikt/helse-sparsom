@@ -10,6 +10,7 @@ import org.flywaydb.core.api.migration.Context
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.log
 import kotlin.system.measureTimeMillis
 
 internal class V4__Dataimport : BaseJavaMigration() {
@@ -17,25 +18,40 @@ internal class V4__Dataimport : BaseJavaMigration() {
     override fun migrate(context: Context) {
         val dao = AktivitetDao({ context.connection }, false)
         val factory = AktivitetFactory(dao)
+
         var counter = 0
-        context.connection.prepareStatement("SELECT fnr, data FROM aktivitetslogg").use { statement ->
-            statement.executeQuery().use { rs ->
-                while (rs.next()) {
-                    measureTimeMillis {
-                        counter += 1
-                        val ident = rs.getLong(1).toString().padStart(11, '0')
-                        val aktivitetslogg = normalizeJson(objectMapper.readTree(rs.getString(1)))
-                        factory.aktiviteter(aktivitetslogg, ident, null)
-                    }.also {
-                        val snitt = 1000.0/it
-                        logg.info("[${counter.toString().padEnd(7)}] brukte $it ms på å importere hele aktivitetsloggen | snitt $snitt personer i sekundet")
+        var pageCount = 0
+        var rows: Int
+        do {
+            val offset = pageCount * BATCH_SIZE
+            rows = 0
+            pageCount += 1
+            measureTimeMillis {
+                logg.info("henter $BATCH_SIZE fra $offset")
+                context.connection.prepareStatement("SELECT fnr, data FROM aktivitetslogg ORDER BY fnr LIMIT $BATCH_SIZE OFFSET $offset").use { statement ->
+                    statement.executeQuery().use { rs ->
+                        while (rs.next()) {
+                            measureTimeMillis {
+                                rows += 1
+                                counter += 1
+                                val ident = rs.getLong(1).toString().padStart(11, '0')
+                                val aktivitetslogg = normalizeJson(objectMapper.readTree(rs.getString(1)))
+                                factory.aktiviteter(aktivitetslogg, ident, null)
+                            }.also {
+                                val snitt = 1000.0 / it
+                                logg.info("[${counter.toString().padEnd(7)}] brukte $it ms på å importere hele aktivitetsloggen | snitt $snitt personer i sekundet")
+                            }
+                        }
                     }
                 }
+            }.also {
+                logg.info("batch [${pageCount.toString().padEnd(5)}] ferdig på $it ms | $rows personer hentet | snitt ${it/rows.toDouble()} ms per person")
             }
-        }
+        } while (rows > 0)
     }
 
     private companion object {
+        private const val BATCH_SIZE = 5000
         private val logg = LoggerFactory.getLogger(AktivitetDao::class.java)
         private val tidsstempelformat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
         private fun normalizeJson(original: JsonNode): List<JsonNode> {
