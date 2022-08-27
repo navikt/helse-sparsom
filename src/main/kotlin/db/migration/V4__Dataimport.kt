@@ -27,7 +27,8 @@ internal class V4__Dataimport : BaseJavaMigration() {
                         val aktivitetslogg = normalizeJson(objectMapper.readTree(rs.getString(1)))
                         factory.aktiviteter(aktivitetslogg, ident, null)
                     }.also {
-                        logg.info("[${counter.toString().padEnd(7)}] brukte $it ms på å importere hele aktivitetsloggen")
+                        val snitt = 1000.0/it
+                        logg.info("[${counter.toString().padEnd(7)}] brukte $it ms på å importere hele aktivitetsloggen | snitt $snitt personer i sekundet")
                     }
                 }
             }
