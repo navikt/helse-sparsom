@@ -36,6 +36,7 @@ internal class V4__Dataimport : BaseJavaMigration() {
                                 counter += 1
                                 val ident = rs.getLong(1).toString().padStart(11, '0')
                                 val aktivitetslogg = normalizeJson(objectMapper.readTree(rs.getString(1)))
+                                logg.info("lagrer ${aktivitetslogg.size} aktiviteter")
                                 factory.aktiviteter(aktivitetslogg, ident, null)
                             }.also {
                                 val snitt = 1000.0 / it
@@ -72,6 +73,7 @@ internal class V4__Dataimport : BaseJavaMigration() {
                         .map { kontekster[it] }
                     aktivitet.replace("kontekster", objectMapper.createArrayNode().addAll(aktivitetKontekster))
                     aktivitet.remove("alvorlighetsgrad")
+                    aktivitet
                 }
             }
         }

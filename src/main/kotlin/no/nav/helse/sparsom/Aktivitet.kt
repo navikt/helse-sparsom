@@ -58,10 +58,7 @@ internal class Aktivitet(
     internal companion object {
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
         internal fun List<Aktivitet>.lagre(aktivitetRepository: AktivitetRepository, personident: String, hendelseId: Long?) {
-            val tidBrukt = measureTimeMillis {
-                aktivitetRepository.lagre(this, personident, hendelseId)
-            }
-            sikkerlogg.info("Tid brukt på insert av alt innhold i meldingen: $tidBrukt")
+            aktivitetRepository.lagre(this, personident, hendelseId)
         }
 
         private fun List<Kontekst>.toDto(hendelseId: Long, hash: String) = flatMap { kontekst ->

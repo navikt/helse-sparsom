@@ -5,6 +5,7 @@ import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 import javax.sql.DataSource
+import kotlin.math.log
 import kotlin.system.measureTimeMillis
 
 internal class AktivitetDao(private val connectionFactory: () -> Connection, private val closeAfterUse: Boolean) : AktivitetRepository {
@@ -81,59 +82,33 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
 
     override fun lagre(aktiviteter: List<Aktivitet>, personident: String, hendelseId: Long?) {
         makeConnection { connection ->
-            measureTimeMillis {
-                measureTimeMillis {
-                    connection.prepareStatement(MELDING_INSERT).use { statement ->
-                        aktiviteter.forEach { it.lagreMelding(statement) }
-                        statement.executeLargeBatch()
-                    }
-                }.also {
-                    logg.info("brukte $it ms på å inserte meldinger")
+            connection.prepareStatement(MELDING_INSERT).use { statement ->
+                aktiviteter.forEach { it.lagreMelding(statement) }
+                statement.executeLargeBatch()
+            }
+            connection.prepareStatement(KONTEKST_TYPE_INSERT).use { statement ->
+                aktiviteter.forEach { it.lagreKontekstType(statement) }
+                statement.executeLargeBatch()
+            }
+            connection.prepareStatement(KONTEKST_NAVN_INSERT).use { statement ->
+                aktiviteter.forEach { it.lagreKontekstNavn(statement) }
+                statement.executeLargeBatch()
+            }
+            connection.prepareStatement(KONTEKST_VERDI_INSERT).use { statement ->
+                aktiviteter.forEach { it.lagreKontekstVerdi(statement) }
+                statement.executeLargeBatch()
+            }
+            connection.prepareStatement(AKTIVITET_INSERT).use { statement ->
+                aktiviteter.forEach { it.lagreAktivitet(statement, personident, hendelseId) }
+                statement.executeLargeBatch().onEachIndexed { index, affectedRows ->
+                    aktiviteter[index].bleLagret(affectedRows == 1L)
+                }.sum().also {
+                    logg.info("$it aktiviteter ble lagret")
                 }
-                measureTimeMillis {
-                    connection.prepareStatement(KONTEKST_TYPE_INSERT).use { statement ->
-                        aktiviteter.forEach { it.lagreKontekstType(statement) }
-                        statement.executeLargeBatch()
-                    }
-                }.also {
-                    logg.info("brukte $it ms på å inserte konteksttyper")
-                }
-                measureTimeMillis {
-                    connection.prepareStatement(KONTEKST_NAVN_INSERT).use { statement ->
-                        aktiviteter.forEach { it.lagreKontekstNavn(statement) }
-                        statement.executeLargeBatch()
-                    }
-                }.also {
-                    logg.info("brukte $it ms på å inserte kontekst detaljnavn")
-                }
-                measureTimeMillis {
-                    connection.prepareStatement(KONTEKST_VERDI_INSERT).use { statement ->
-                        aktiviteter.forEach { it.lagreKontekstVerdi(statement) }
-                        statement.executeLargeBatch()
-                    }
-                }.also {
-                    logg.info("brukte $it ms på å inserte kontekst detaljverdier")
-                }
-                measureTimeMillis {
-                    connection.prepareStatement(AKTIVITET_INSERT).use { statement ->
-                        aktiviteter.forEach { it.lagreAktivitet(statement, personident, hendelseId) }
-                        statement.executeLargeBatch().forEachIndexed { index, affectedRows ->
-                            aktiviteter[index].bleLagret(affectedRows == 1L)
-                        }
-                    }
-                }.also {
-                    logg.info("brukte $it ms på å inserte aktiviteter")
-                }
-                measureTimeMillis {
-                    connection.prepareStatement(AKTIVITET_KONTEKST_INSERT).use { statement ->
-                        aktiviteter.forEach { it.kobleAktivitetOgKontekst(statement) }
-                        statement.executeLargeBatch()
-                    }
-                }.also {
-                    logg.info("brukte $it ms på å inserte aktivitet-kontekst-koblinger")
-                }
-            }.also {
-                logg.info("brukte $it ms på å inserte ${aktiviteter.size} aktiviteter")
+            }
+            connection.prepareStatement(AKTIVITET_KONTEKST_INSERT).use { statement ->
+                aktiviteter.forEach { it.kobleAktivitetOgKontekst(statement) }
+                statement.executeLargeBatch()
             }
         }
     }
