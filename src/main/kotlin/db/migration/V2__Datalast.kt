@@ -28,7 +28,6 @@ internal class V2__Datalast : BaseJavaMigration() {
             password = env["DATABASE_SPARSOM_PASSWORD"]
             initializationFailTimeout = Duration.ofMinutes(1).toMillis()
             connectionTimeout = Duration.ofMinutes(1).toMillis()
-            maximumPoolSize = 1
         }
     }
     private val spleisDataSource by lazy { HikariDataSource(config) }
@@ -37,6 +36,7 @@ internal class V2__Datalast : BaseJavaMigration() {
         if (config.username.isNullOrBlank()) return log.info("Kjører _IKKE_ migrering fordi jdbc ikke er satt. Mangler konfig?")
         log.info("Kjører i gang migrering")
         spleisDataSource.use { ds ->
+            log.info("Henter personer")
             ds.connection.autoCommit = false
             val personer = hentPersoner(ds.connection)
             var gjenstående = personer.size
