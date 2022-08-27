@@ -44,29 +44,30 @@ internal class V2__Datalast : BaseJavaMigration() {
             ds.connection.prepareStatement(SELECT_JSON).use { fetchStatement ->
                 var tidBrukt = 0L
                 var count = 0
-                personer.forEach { (fnr, id) ->
-                    tidBrukt += migrerPerson(fetchStatement, fnr, id)
-                    count += 1
-                    gjenstående -= 1
+                personer.values.chunked(BATCH_SIZE).forEach { ider ->
+                    tidBrukt += migrerPersoner(fetchStatement, ider)
+                    count += ider.size
+                    gjenstående -= ider.size
                     if (count % BATCH_SIZE == 0) {
                         count = 0
                         val snitt = tidBrukt / BATCH_SIZE.toDouble()
                         val gjenståendeTid = Duration.ofMillis((gjenstående * snitt).toLong())
-                        log.info("brukt $tidBrukt ms på å hente 100 personer, snitt $snitt ms per person. gjenstående $gjenstående personer, ca ${gjenståendeTid.toDaysPart()} dager ${gjenståendeTid.toHoursPart()} timer ${gjenståendeTid.toSecondsPart()} sekunder gjenstående")
+                        log.info("brukt $tidBrukt ms på å hente $BATCH_SIZE personer, snitt $snitt ms per person. gjenstående $gjenstående personer, ca ${gjenståendeTid.toDaysPart()} dager ${gjenståendeTid.toHoursPart()} timer ${gjenståendeTid.toSecondsPart()} sekunder gjenstående")
                     }
                 }
             }
         }
     }
 
-    private fun migrerPerson(fetchStatement: PreparedStatement, fnr: Long, id: Long): Long {
-        fetchStatement.setLong(1, id)
+    private fun migrerPersoner(fetchStatement: PreparedStatement, ider: List<Long>): Long {
+        ider.forEachIndexed { index, id -> fetchStatement.setLong(index + 1, id) }
+        (ider.size until BATCH_SIZE).forEach { index ->
+            fetchStatement.setLong(index + 1, 0)
+        }
         return measureTimeMillis {
             val rs = fetchStatement.executeQuery()
             fetchStatement.clearParameters()
-            if (!rs.next()) {
-                log.warn("Fant ikke json for rad id=$id")
-            } else {
+            while (rs.next()) {
                 val data = objectMapper.readTree(rs.getString("data"))
             }
         }
@@ -103,7 +104,7 @@ internal class V2__Datalast : BaseJavaMigration() {
         """
         @Language("PostgreSQL")
         private val SELECT_JSON = """
-            select data from person where id=?;
+            select data from person where id IN (${0.until(BATCH_SIZE).joinToString { "?" }});
         """
     }
 }
