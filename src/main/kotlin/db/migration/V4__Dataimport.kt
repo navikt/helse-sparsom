@@ -17,15 +17,17 @@ internal class V4__Dataimport : BaseJavaMigration() {
     override fun migrate(context: Context) {
         val dao = AktivitetDao({ context.connection }, false)
         val factory = AktivitetFactory(dao)
+        var counter = 0
         context.connection.prepareStatement("SELECT fnr, data FROM aktivitetslogg").use { statement ->
             statement.executeQuery().use { rs ->
                 while (rs.next()) {
                     measureTimeMillis {
+                        counter += 1
                         val ident = rs.getLong(1).toString().padStart(11, '0')
                         val aktivitetslogg = normalizeJson(objectMapper.readTree(rs.getString(1)))
                         factory.aktiviteter(aktivitetslogg, ident, null)
                     }.also {
-                        logg.info("brukte $it ms på å importere hele aktivitetsloggen")
+                        logg.info("[${counter.toString().padEnd(7)}] brukte $it ms på å importere hele aktivitetsloggen")
                     }
                 }
             }
