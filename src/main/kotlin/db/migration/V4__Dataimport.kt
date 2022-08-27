@@ -51,7 +51,7 @@ internal class V4__Dataimport : BaseJavaMigration() {
     }
 
     private companion object {
-        private const val BATCH_SIZE = 5000
+        private const val BATCH_SIZE = 500
         private val logg = LoggerFactory.getLogger(AktivitetDao::class.java)
         private val tidsstempelformat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
         private fun normalizeJson(original: JsonNode): List<JsonNode> {
