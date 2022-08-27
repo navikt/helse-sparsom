@@ -44,7 +44,7 @@ internal class V3__Datalast : BaseJavaMigration() {
             var tidBrukt = 0L
             var count = 0
             var insertBatchCount = 0
-            ds.connection.prepareStatement(INSERT).use { insertStatement ->
+            context.connection.prepareStatement(INSERT).use { insertStatement ->
                 ds.connection.prepareStatement(SELECT_JSON).use { fetchStatement ->
                     personer.values.chunked(BATCH_SIZE).forEach { ider ->
                         tidBrukt += migrerPersoner(insertStatement, fetchStatement, ider)
