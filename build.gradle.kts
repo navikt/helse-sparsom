@@ -13,7 +13,6 @@ val logbackClassicVersion = "1.2.11"
 val logstashVersion = "7.2"
 val commonsCodecVersion = "1.15"
 val rapidsAndRiversVersion = "2022072721371658950659.c1e8f7bf35c6"
-val cloudSqlVersion = "1.6.0"
 
 plugins {
     kotlin("jvm") version "1.7.10"
@@ -28,7 +27,6 @@ dependencies {
     implementation("org.flywaydb:flyway-core:$flywayCoreVersion")
     implementation("com.github.seratch:kotliquery:$kotliqueryVersion")
     implementation("org.postgresql:postgresql:$postgresqlVersion")
-    implementation("com.google.cloud.sql:postgres-socket-factory:$cloudSqlVersion")
     implementation("com.zaxxer:HikariCP:$hikariCPVersion")
     implementation("commons-codec:commons-codec:$commonsCodecVersion")
     implementation("ch.qos.logback:logback-classic:$logbackClassicVersion")

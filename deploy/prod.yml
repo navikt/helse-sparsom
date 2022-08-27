@@ -32,14 +32,7 @@ spec:
     path: /metrics
   kafka:
     pool: nav-prod
-  envFrom:
-    - secret: google-sql-spleis-spleis-sparsom-e28cfed2
   gcp:
-    permissions:
-      - resource:
-          apiVersion: resourcemanager.cnrm.cloud.google.com/v1beta1
-          kind: Project
-        role: roles/cloudsql.client
     sqlInstances:
       - type: POSTGRES_14
         diskAutoresize: true
@@ -61,7 +54,3 @@ spec:
       value: "10"
     - name: KAFKA_MAX_POLL_INTERVAL_MS
       value: "1200000"
-    - name: DATABASE_SPARSOM_REGION
-      value: "europe-north1"
-    - name: DATABASE_SPARSOM_INSTANCE
-      value: "helse-spleis"
