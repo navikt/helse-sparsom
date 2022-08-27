@@ -42,6 +42,7 @@ internal class V3__Datalast : BaseJavaMigration() {
             var gjenstående = personer.size
 
             var tidBrukt = 0L
+            var tidBruktBatch = 0L
             var count = 0
             var insertBatchCount = 0
             context.connection.prepareStatement(INSERT).use { insertStatement ->
@@ -49,12 +50,14 @@ internal class V3__Datalast : BaseJavaMigration() {
                     personer.values.chunked(BATCH_SIZE).forEach { ider ->
                         val tidBruktChunk = migrerPersoner(insertStatement, fetchStatement, ider)
                         tidBrukt += tidBruktChunk
+                        tidBruktBatch += tidBruktChunk
                         count += ider.size
                         insertBatchCount += ider.size
                         gjenstående -= ider.size
                         if (insertBatchCount >= INSERT_BATCH_SIZE) {
                             log.info("Utfører batch insert for $insertBatchCount personer")
                             insertBatchCount = 0
+                            tidBruktBatch = 0
                             measureTimeMillis {
                                 insertStatement.executeLargeBatch()
                                 insertStatement.clearBatch()
@@ -66,7 +69,7 @@ internal class V3__Datalast : BaseJavaMigration() {
                             count = 0
                             val snitt = tidBruktChunk / BATCH_SIZE.toDouble()
                             val gjenståendeTid = Duration.ofMillis((gjenstående * snitt).toLong())
-                            log.info("[${insertBatchCount.toString().padStart(4, '0')} / ${INSERT_BATCH_SIZE}] ${Duration.ofMillis(tidBrukt).toSeconds()} sekunder totalt | $tidBruktChunk ms brukt på ${ider.size} personer | snitt $snitt ms per person | gjenstående $gjenstående personer, ca ${gjenståendeTid.toDaysPart()} dager ${gjenståendeTid.toHoursPart()} timer ${gjenståendeTid.toSecondsPart()} sekunder gjenstående")
+                            log.info("[${insertBatchCount.toString().padStart(4, '0')} / ${INSERT_BATCH_SIZE}] ${Duration.ofMillis(tidBrukt).toSeconds()} sekunder totalt | $tidBruktBatch ms brukt på nåværende batch | $tidBruktChunk ms brukt på ${ider.size} personer | snitt $snitt ms per person | gjenstående $gjenstående personer, ca ${gjenståendeTid.toDaysPart()} dager ${gjenståendeTid.toHoursPart()} timer ${gjenståendeTid.toSecondsPart()} sekunder gjenstående")
                         }
                     }
                     if (insertBatchCount > 0) {
