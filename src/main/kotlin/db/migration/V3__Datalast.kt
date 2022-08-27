@@ -53,6 +53,7 @@ internal class V3__Datalast : BaseJavaMigration() {
                         gjenstående -= ider.size
                         if (insertBatchCount >= INSERT_BATCH_SIZE) {
                             log.info("Utfører batch insert for $insertBatchCount personer")
+                            insertBatchCount = 0
                             measureTimeMillis {
                                 insertStatement.executeLargeBatch()
                                 insertStatement.clearBatch()
@@ -64,11 +65,12 @@ internal class V3__Datalast : BaseJavaMigration() {
                             count = 0
                             val snitt = tidBrukt / BATCH_SIZE.toDouble()
                             val gjenståendeTid = Duration.ofMillis((gjenstående * snitt).toLong())
-                            log.info("brukt $tidBrukt ms på å hente $BATCH_SIZE personer, snitt $snitt ms per person. gjenstående $gjenstående personer, ca ${gjenståendeTid.toDaysPart()} dager ${gjenståendeTid.toHoursPart()} timer ${gjenståendeTid.toSecondsPart()} sekunder gjenstående")
+                            log.info("[${insertBatchCount.toString().padStart(4, '0')} / ${INSERT_BATCH_SIZE}] brukt $tidBrukt ms på å hente $BATCH_SIZE personer, snitt $snitt ms per person. gjenstående $gjenstående personer, ca ${gjenståendeTid.toDaysPart()} dager ${gjenståendeTid.toHoursPart()} timer ${gjenståendeTid.toSecondsPart()} sekunder gjenstående")
                         }
                     }
                     if (insertBatchCount > 0) {
                         log.info("Utfører batch insert for $insertBatchCount personer")
+                        insertBatchCount = 0
                         measureTimeMillis {
                             insertStatement.executeLargeBatch()
                             insertStatement.clearBatch()
@@ -114,7 +116,7 @@ internal class V3__Datalast : BaseJavaMigration() {
 
     private companion object {
         private const val INSERT_BATCH_SIZE = 5000
-        private const val BATCH_SIZE = 100
+        private const val BATCH_SIZE = 1000
         private val log = LoggerFactory.getLogger(V3__Datalast::class.java)
         private val objectMapper = jacksonObjectMapper()
             .registerModule(JavaTimeModule())
