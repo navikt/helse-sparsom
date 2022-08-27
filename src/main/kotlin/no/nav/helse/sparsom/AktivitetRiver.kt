@@ -40,7 +40,7 @@ internal class AktivitetRiver(
         val tidBrukt = measureTimeMillis {
             val id = hendelseRepository.lagre(fødselsnummer, hendelseId, packet.toJson(), tidsstempel)
             val aktiviteter = packet["aktiviteter"].takeUnless(JsonNode::isMissingOrNull) ?: emptyList()
-            aktivitetFactory.aktiviteter(aktiviteter, id)
+            aktivitetFactory.aktiviteter(aktiviteter, fødselsnummer, id)
         }
         logger.info("lagrer aktiviteter fra hendelse {}. Tid brukt: ${tidBrukt}ms", keyValue("meldingsreferanseId", hendelseId))
     }

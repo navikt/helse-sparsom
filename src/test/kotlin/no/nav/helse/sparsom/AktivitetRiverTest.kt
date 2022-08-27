@@ -25,25 +25,25 @@ internal class AktivitetRiverTest {
     fun river() {
         val melding = AktivitetRiverTest::class.java.classLoader.getResource("testmelding.json")!!.readText()
         testRapid.sendTestMessage(melding)
-        verify(exactly = 1) { aktivitetFactory.aktiviteter(any(), any()) }
+        verify(exactly = 1) { aktivitetFactory.aktiviteter(any(), "12345678910", any()) }
     }
 
     @Test
     fun `mangler fødselsnummer`() {
         testRapid.sendTestMessage(meldingUtenFnr())
-        verify(exactly = 0) { aktivitetFactory.aktiviteter(any(), any()) }
+        verify(exactly = 0) { aktivitetFactory.aktiviteter(any(), any(), any()) }
     }
 
     @Test
     fun `mangler aktiviteter`() {
         testRapid.sendTestMessage(meldingUtenAktiviteter())
-        verify(exactly = 0) { aktivitetFactory.aktiviteter(any(), any()) }
+        verify(exactly = 0) { aktivitetFactory.aktiviteter(any(), any(), any()) }
     }
 
     @Test
     fun `aktivitet har dårlig timestamp`() {
         testRapid.sendTestMessage(meldingMedDårligTimestamp())
-        verify(exactly = 0) { aktivitetFactory.aktiviteter(any(), any()) }
+        verify(exactly = 0) { aktivitetFactory.aktiviteter(any(), any(), any()) }
     }
 
     @Language("JSON")

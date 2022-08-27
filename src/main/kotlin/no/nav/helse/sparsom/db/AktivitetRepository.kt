@@ -5,8 +5,8 @@ import no.nav.helse.sparsom.Kontekst
 
 internal interface AktivitetRepository {
     fun lagre(
-        aktiviteter: List<Aktivitet.AktivitetDTO>,
-        kontekster: List<Kontekst.KontekstDTO>,
-        hendelseId: Long
+        aktiviteter: List<Aktivitet>,
+        personident: String,
+        hendelseId: Long?
     )
 }

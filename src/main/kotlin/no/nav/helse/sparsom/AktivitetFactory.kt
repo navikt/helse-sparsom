@@ -9,14 +9,14 @@ import no.nav.helse.sparsom.Aktivitet.Companion.lagre
 import no.nav.helse.sparsom.db.AktivitetRepository
 
 internal class AktivitetFactory(private val aktivitetRepository: AktivitetRepository) {
-    internal fun aktiviteter(aktiviteter: Iterable<JsonNode>, hendelseId: Long) {
+    internal fun aktiviteter(aktiviteter: Iterable<JsonNode>, personident: String, hendelseId: Long?) {
         aktiviteter
             .map { objectMapper.treeToValue(it, Aktivitet::class.java) }
-            .lagre(aktivitetRepository, hendelseId)
+            .lagre(aktivitetRepository, personident, hendelseId)
     }
 
-    private companion object {
-        private val objectMapper = jacksonObjectMapper()
+    internal companion object {
+        internal val objectMapper = jacksonObjectMapper()
             .registerModule(JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)

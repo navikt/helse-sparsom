@@ -18,46 +18,126 @@ import kotlin.time.measureTimedValue
 
 internal class AktivitetDao(private val dataSource: () -> DataSource): AktivitetRepository {
     private companion object {
+        private val logg = LoggerFactory.getLogger(AktivitetDao::class.java)
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
+        @Language("PostgreSQL")
+        private val PERSON_INSERT = """
+            INSERT INTO person(ident) VALUES(?) 
+            ON CONFLICT(ident) DO NOTHING;
+        """
+        @Language("PostgreSQL")
+        private val HENDELSE_INSERT = """
+            INSERT INTO hendelse(hendelse_id, personident_id, hendelse, tidsstempel) 
+            VALUES (?, SELECT id FROM personident WHERE ident=? LIMIT 1, ?, ?) 
+            ON CONFLICT (hendelse_id) DO NOTHING;
+        """
+
+        @Language("PostgreSQL")
+        private val MELDING_INSERT = """
+            INSERT INTO melding(tekst) VALUES(?) 
+            ON CONFLICT (tekst) DO NOTHING;
+        """
+
+        @Language("PostgreSQL")
+        private val KONTEKST_TYPE_INSERT = """
+            INSERT INTO kontekst_type(type) VALUES(?) 
+            ON CONFLICT (type) DO NOTHING;
+        """
+
+        @Language("PostgreSQL")
+        private val KONTEKST_NAVN_INSERT = """
+            INSERT INTO kontekst_navn(navn) VALUES(?) 
+            ON CONFLICT (navn) DO NOTHING;
+        """
+        @Language("PostgreSQL")
+        private val KONTEKST_VERDI_INSERT = """
+            INSERT INTO kontekst_verdi(verdi) VALUES(?) 
+            ON CONFLICT (verdi) DO NOTHING;
+        """
+        @Language("PostgreSQL")
+        private val AKTIVITET_INSERT = """
+            INSERT INTO aktivitet(melding_id, personident_id, hendelse_id, level, tidsstempel, hash) 
+            VALUES(
+                (SELECT id FROM melding WHERE tekst=? LIMIT 1),
+                (SELECT id FROM personident WHERE ident=? LIMIT 1), 
+                ?, 
+                CAST(? AS LEVEL), 
+                CAST(? AS timestamptz), 
+                ?
+            ) 
+            ON CONFLICT (hash) DO NOTHING;
+        """
+        @Language("PostgreSQL")
+        private val AKTIVITET_KONTEKST_INSERT = """
+            INSERT INTO aktivitet_kontekst(aktivitet_id, kontekst_type_id, kontekst_navn_id, kontekst_verdi_id) 
+            VALUES(
+                (SELECT id FROM aktivitet WHERE hash=? LIMIT 1), 
+                (SELECT id FROM kontekst_type WHERE type=? LIMIT 1), 
+                (SELECT id FROM kontekst_navn WHERE navn=? LIMIT 1),
+                (SELECT id FROM kontekst_verdi WHERE verdi=? LIMIT 1)
+            ) 
+            ON CONFLICT DO NOTHING;
+        """
+
     }
 
     @OptIn(ExperimentalTime::class)
-    override fun lagre(aktiviteter: List<Aktivitet.AktivitetDTO>, kontekster: List<Kontekst.KontekstDTO>, hendelseId: Long) {
-        sessionOf(dataSource()).use { session ->
-            session.transaction { tx ->
-                val (lagredeHasher, tidBruktLagreAktiviteter) = measureTimedValue {
-                    tx.lagreAktiviteter(aktiviteter, hendelseId)
+    override fun lagre(aktiviteter: List<Aktivitet>, personident: String, hendelseId: Long?) {
+        measureTimeMillis {
+            dataSource().connection.use { connection ->
+                measureTimeMillis {
+                    connection.prepareStatement(MELDING_INSERT).use { statement ->
+                        aktiviteter.forEach { it.lagreMelding(statement) }
+                        statement.executeLargeBatch()
+                    }
+                }.also {
+                    logg.info("brukte $it ms på å inserte meldinger")
                 }
-                sikkerlogg.info("Tid brukt på insert av ${lagredeHasher.size} aktiviteter: ${tidBruktLagreAktiviteter.inWholeMilliseconds}")
-                val konteksterSomSkalLagres = kontekster.filtrerHarHash(lagredeHasher).toSet()
-                if (konteksterSomSkalLagres.isEmpty()) return@transaction
-                val tidBruktLagreKontekster = measureTimeMillis {
-                    tx.lagreKontekster(konteksterSomSkalLagres)
+                measureTimeMillis {
+                    connection.prepareStatement(KONTEKST_TYPE_INSERT).use { statement ->
+                        aktiviteter.forEach { it.lagreKontekstType(statement) }
+                        statement.executeLargeBatch()
+                    }
+                }.also {
+                    logg.info("brukte $it ms på å inserte konteksttyper")
                 }
-                val (antallKoblingerLagret, tidBruktLagreKoblinger) = measureTimedValue {
-                    tx.lagreKoblinger(konteksterSomSkalLagres)
+                measureTimeMillis {
+                    connection.prepareStatement(KONTEKST_NAVN_INSERT).use { statement ->
+                        aktiviteter.forEach { it.lagreKontekstNavn(statement) }
+                        statement.executeLargeBatch()
+                    }
+                }.also {
+                    logg.info("brukte $it ms på å inserte kontekst detaljnavn")
                 }
-                sikkerlogg.info("Tid brukt på insert av ${konteksterSomSkalLagres.size} kontekster: $tidBruktLagreKontekster")
-                sikkerlogg.info("Tid brukt på insert av $antallKoblingerLagret koblinger: $tidBruktLagreKoblinger")
+                measureTimeMillis {
+                    connection.prepareStatement(KONTEKST_VERDI_INSERT).use { statement ->
+                        aktiviteter.forEach { it.lagreKontekstVerdi(statement) }
+                        statement.executeLargeBatch()
+                    }
+                }.also {
+                    logg.info("brukte $it ms på å inserte kontekst detaljverdier")
+                }
+                measureTimeMillis {
+                    connection.prepareStatement(AKTIVITET_INSERT).use { statement ->
+                        aktiviteter.forEach { it.lagreAktivitet(statement, personident, hendelseId) }
+                        statement.executeLargeBatch().forEachIndexed { index, affectedRows ->
+                            aktiviteter[index].bleLagret(affectedRows == 1L)
+                        }
+                    }
+                }.also {
+                    logg.info("brukte $it ms på å inserte aktiviteter")
+                }
+                measureTimeMillis {
+                    connection.prepareStatement(AKTIVITET_KONTEKST_INSERT).use { statement ->
+                        aktiviteter.forEach { it.kobleAktivitetOgKontekst(statement) }
+                        statement.executeLargeBatch()
+                    }
+                }.also {
+                    logg.info("brukte $it ms på å inserte aktivitet-kontekst-koblinger")
+                }
             }
+        }.also {
+            logg.info("brukte $it ms på å inserte ${aktiviteter.size} aktiviteter")
         }
-    }
-
-    private fun TransactionalSession.lagreAktiviteter(aktiviteter: List<Aktivitet.AktivitetDTO>, hendelseId: Long): List<String> {
-        @Language("PostgreSQL")
-        val query = "INSERT INTO aktivitet(hendelse_id, level, melding, tidsstempel, hash) VALUES ${aktiviteter.joinToString { "(?::BIGINT, CAST(? as LEVEL), ?, CAST(? as timestamptz), ?)" }} ON CONFLICT (hash) DO NOTHING RETURNING(hash)"
-        return run(queryOf(query, *aktiviteter.stringify(hendelseId).toTypedArray()).map { it.string(1) }.asList)
-    }
-
-    private fun TransactionalSession.lagreKontekster(kontekster: Set<Kontekst.KontekstDTO>) {
-        @Language("PostgreSQL")
-        val query = "INSERT INTO kontekst (type, identifikatornavn, identifikator) VALUES ${kontekster.joinToString { "(?, ?, ?)" }} ON CONFLICT(type, identifikatornavn, identifikator) DO NOTHING"
-        run(queryOf(query, *kontekster.stringify().toTypedArray()).asUpdate)
-    }
-
-    private fun TransactionalSession.lagreKoblinger(kontekster: Set<Kontekst.KontekstDTO>): Int {
-        @Language("PostgreSQL")
-        val query = "INSERT INTO aktivitet_kontekst (aktivitet_id, kontekst_id) VALUES ${kontekster.joinToString { "((SELECT id FROM aktivitet WHERE hash=? LIMIT 1), (SELECT id FROM kontekst WHERE type=? AND identifikatornavn=? AND identifikator=? LIMIT 1))" }}"
-        return run(queryOf(query, *kontekster.stringifyForKobling().toTypedArray()).asUpdate)
     }
 }
