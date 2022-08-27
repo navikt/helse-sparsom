@@ -7,6 +7,7 @@ import no.nav.helse.sparsom.AktivitetFactory.Companion.objectMapper
 import no.nav.helse.sparsom.db.AktivitetDao
 import org.flywaydb.core.api.migration.BaseJavaMigration
 import org.flywaydb.core.api.migration.Context
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.system.measureTimeMillis
@@ -23,6 +24,8 @@ internal class V4__Dataimport : BaseJavaMigration() {
                         val ident = rs.getLong(1).toString().padStart(11, '0')
                         val aktivitetslogg = normalizeJson(objectMapper.readTree(rs.getString(1)))
                         factory.aktiviteter(aktivitetslogg, ident, null)
+                    }.also {
+                        logg.info("brukte $it ms på å importere hele aktivitetsloggen")
                     }
                 }
             }
@@ -30,6 +33,7 @@ internal class V4__Dataimport : BaseJavaMigration() {
     }
 
     private companion object {
+        private val logg = LoggerFactory.getLogger(AktivitetDao::class.java)
         private val tidsstempelformat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
         private fun normalizeJson(original: JsonNode): List<JsonNode> {
             val kontekster = original.path("kontekster").map {
