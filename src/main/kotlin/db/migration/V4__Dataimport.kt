@@ -35,7 +35,7 @@ internal class V4__Dataimport : BaseJavaMigration() {
                                 rows += 1
                                 counter += 1
                                 val ident = rs.getLong(1).toString().padStart(11, '0')
-                                val aktivitetslogg = normalizeJson(objectMapper.readTree(rs.getString(1)))
+                                val aktivitetslogg = normalizeJson(objectMapper.readTree(rs.getString(2)))
                                 logg.info("lagrer ${aktivitetslogg.size} aktiviteter")
                                 factory.aktiviteter(aktivitetslogg, ident, null)
                             }.also {
