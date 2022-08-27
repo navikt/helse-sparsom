@@ -62,6 +62,7 @@ internal class V4__Dataimport : BaseJavaMigration() {
                 it.set<JsonNode>("kontekstmap", it.path("kontekstMap").deepCopy())
                 it.remove("kontekstType")
                 it.remove("kontekstMap")
+                it
             }
             return original.path("aktiviteter").mapNotNull { aktivitet ->
                 (aktivitet as ObjectNode)
@@ -73,6 +74,7 @@ internal class V4__Dataimport : BaseJavaMigration() {
                         .map { kontekster[it] }
                     aktivitet.replace("kontekster", objectMapper.createArrayNode().addAll(aktivitetKontekster))
                     aktivitet.remove("alvorlighetsgrad")
+                    aktivitet.remove("detaljer")
                     aktivitet
                 }
             }
