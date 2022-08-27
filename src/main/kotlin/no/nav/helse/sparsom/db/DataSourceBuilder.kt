@@ -51,7 +51,6 @@ internal class DataSourceBuilder(env: Map<String, String>) {
     private fun runMigration(dataSource: DataSource) =
         Flyway.configure()
             .dataSource(dataSource)
-            .baselineOnMigrate(true)
             .lockRetryCount(-1)
             .load()
             .migrate()
