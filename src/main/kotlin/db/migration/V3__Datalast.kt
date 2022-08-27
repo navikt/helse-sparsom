@@ -47,7 +47,8 @@ internal class V3__Datalast : BaseJavaMigration() {
             context.connection.prepareStatement(INSERT).use { insertStatement ->
                 ds.connection.prepareStatement(SELECT_JSON).use { fetchStatement ->
                     personer.values.chunked(BATCH_SIZE).forEach { ider ->
-                        tidBrukt += migrerPersoner(insertStatement, fetchStatement, ider)
+                        val tidBruktChunk = migrerPersoner(insertStatement, fetchStatement, ider)
+                        tidBrukt += tidBruktChunk
                         count += ider.size
                         insertBatchCount += ider.size
                         gjenstående -= ider.size
@@ -63,9 +64,9 @@ internal class V3__Datalast : BaseJavaMigration() {
                         }
                         if (count % BATCH_SIZE == 0) {
                             count = 0
-                            val snitt = tidBrukt / BATCH_SIZE.toDouble()
+                            val snitt = tidBruktChunk / BATCH_SIZE.toDouble()
                             val gjenståendeTid = Duration.ofMillis((gjenstående * snitt).toLong())
-                            log.info("[${insertBatchCount.toString().padStart(4, '0')} / ${INSERT_BATCH_SIZE}] brukt $tidBrukt ms på å hente $BATCH_SIZE personer, snitt $snitt ms per person. gjenstående $gjenstående personer, ca ${gjenståendeTid.toDaysPart()} dager ${gjenståendeTid.toHoursPart()} timer ${gjenståendeTid.toSecondsPart()} sekunder gjenstående")
+                            log.info("[${insertBatchCount.toString().padStart(4, '0')} / ${INSERT_BATCH_SIZE}] ${Duration.ofMillis(tidBrukt).toSeconds()} sekunder totalt | $tidBruktChunk ms brukt på ${ider.size} personer | snitt $snitt ms per person | gjenstående $gjenstående personer, ca ${gjenståendeTid.toDaysPart()} dager ${gjenståendeTid.toHoursPart()} timer ${gjenståendeTid.toSecondsPart()} sekunder gjenstående")
                         }
                     }
                     if (insertBatchCount > 0) {
