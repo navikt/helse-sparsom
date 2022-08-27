@@ -16,7 +16,7 @@ private fun createApp(env: Map<String, String>): RapidsConnection {
     val dataSource by lazy { dataSourceBuilder.getDataSource() }
 
     return RapidApplication.create(env).apply {
-        val aktivitetFactory = AktivitetFactory(AktivitetDao { dataSource })
+        val aktivitetFactory = AktivitetFactory(AktivitetDao(dataSource))
         AktivitetRiver(this, HendelseDao { dataSource }, aktivitetFactory)
         register(object : RapidsConnection.StatusListener {
             override fun onStartup(rapidsConnection: RapidsConnection) {

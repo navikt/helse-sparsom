@@ -21,7 +21,7 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
 
     @BeforeAll
     fun beforeAll() {
-        aktivitetDao = AktivitetDao { dataSource }
+        aktivitetDao = AktivitetDao(dataSource)
         hendelseDao = HendelseDao { dataSource }
     }
 

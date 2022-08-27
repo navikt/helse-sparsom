@@ -1,22 +1,15 @@
 package no.nav.helse.sparsom.db
 
-import kotliquery.TransactionalSession
-import kotliquery.queryOf
-import kotliquery.sessionOf
 import no.nav.helse.sparsom.Aktivitet
-import no.nav.helse.sparsom.Aktivitet.AktivitetDTO.Companion.stringify
-import no.nav.helse.sparsom.Kontekst
-import no.nav.helse.sparsom.Kontekst.KontekstDTO.Companion.filtrerHarHash
-import no.nav.helse.sparsom.Kontekst.KontekstDTO.Companion.stringify
-import no.nav.helse.sparsom.Kontekst.KontekstDTO.Companion.stringifyForKobling
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
+import java.sql.Connection
 import javax.sql.DataSource
 import kotlin.system.measureTimeMillis
-import kotlin.time.ExperimentalTime
-import kotlin.time.measureTimedValue
 
-internal class AktivitetDao(private val dataSource: () -> DataSource): AktivitetRepository {
+internal class AktivitetDao(private val connectionFactory: () -> Connection, private val closeAfterUse: Boolean) : AktivitetRepository {
+    constructor(dataSource: DataSource): this({ dataSource.connection }, true)
+
     private companion object {
         private val logg = LoggerFactory.getLogger(AktivitetDao::class.java)
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
@@ -81,10 +74,14 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
 
     }
 
-    @OptIn(ExperimentalTime::class)
+    private fun makeConnection(block: (Connection) -> Unit) {
+        if (!closeAfterUse) return block(connectionFactory())
+        return connectionFactory().use(block)
+    }
+
     override fun lagre(aktiviteter: List<Aktivitet>, personident: String, hendelseId: Long?) {
-        measureTimeMillis {
-            dataSource().connection.use { connection ->
+        makeConnection { connection ->
+            measureTimeMillis {
                 measureTimeMillis {
                     connection.prepareStatement(MELDING_INSERT).use { statement ->
                         aktiviteter.forEach { it.lagreMelding(statement) }
@@ -135,9 +132,9 @@ internal class AktivitetDao(private val dataSource: () -> DataSource): Aktivitet
                 }.also {
                     logg.info("brukte $it ms på å inserte aktivitet-kontekst-koblinger")
                 }
+            }.also {
+                logg.info("brukte $it ms på å inserte ${aktiviteter.size} aktiviteter")
             }
-        }.also {
-            logg.info("brukte $it ms på å inserte ${aktiviteter.size} aktiviteter")
         }
     }
 }
