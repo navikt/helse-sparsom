@@ -16,7 +16,7 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
         @Language("PostgreSQL")
         private val PERSON_INSERT = """
-            INSERT INTO person(ident) VALUES(?) 
+            INSERT INTO personident(ident) VALUES(?) 
             ON CONFLICT(ident) DO NOTHING;
         """
         @Language("PostgreSQL")
@@ -82,6 +82,10 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
 
     override fun lagre(aktiviteter: List<Aktivitet>, personident: String, hendelseId: Long?) {
         makeConnection { connection ->
+            connection.prepareStatement(PERSON_INSERT).use { statement ->
+                statement.setString(1, personident)
+                statement.execute()
+            }
             connection.prepareStatement(MELDING_INSERT).use { statement ->
                 aktiviteter.forEach { it.lagreMelding(statement) }
                 statement.executeLargeBatch()
