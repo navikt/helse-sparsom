@@ -13,7 +13,7 @@ import java.sql.PreparedStatement
 import java.time.Duration
 import kotlin.system.measureTimeMillis
 
-internal class V2__Datalast : BaseJavaMigration() {
+internal class V3__Datalast : BaseJavaMigration() {
 
     private val env = System.getenv()
     private val config by lazy {
@@ -41,25 +41,47 @@ internal class V2__Datalast : BaseJavaMigration() {
             val personer = hentPersoner(ds.connection)
             var gjenstående = personer.size
 
-            ds.connection.prepareStatement(SELECT_JSON).use { fetchStatement ->
-                var tidBrukt = 0L
-                var count = 0
-                personer.values.chunked(BATCH_SIZE).forEach { ider ->
-                    tidBrukt += migrerPersoner(fetchStatement, ider)
-                    count += ider.size
-                    gjenstående -= ider.size
-                    if (count % BATCH_SIZE == 0) {
-                        count = 0
-                        val snitt = tidBrukt / BATCH_SIZE.toDouble()
-                        val gjenståendeTid = Duration.ofMillis((gjenstående * snitt).toLong())
-                        log.info("brukt $tidBrukt ms på å hente $BATCH_SIZE personer, snitt $snitt ms per person. gjenstående $gjenstående personer, ca ${gjenståendeTid.toDaysPart()} dager ${gjenståendeTid.toHoursPart()} timer ${gjenståendeTid.toSecondsPart()} sekunder gjenstående")
+            var tidBrukt = 0L
+            var count = 0
+            var insertBatchCount = 0
+            ds.connection.prepareStatement(INSERT).use { insertStatement ->
+                ds.connection.prepareStatement(SELECT_JSON).use { fetchStatement ->
+                    personer.values.chunked(BATCH_SIZE).forEach { ider ->
+                        tidBrukt += migrerPersoner(insertStatement, fetchStatement, ider)
+                        count += ider.size
+                        insertBatchCount += ider.size
+                        gjenstående -= ider.size
+                        if (insertBatchCount >= INSERT_BATCH_SIZE) {
+                            log.info("Utfører batch insert for $insertBatchCount personer")
+                            measureTimeMillis {
+                                insertStatement.executeLargeBatch()
+                                insertStatement.clearBatch()
+                            }.also {
+                                log.info("batch insert tok $it ms")
+                            }
+                        }
+                        if (count % BATCH_SIZE == 0) {
+                            count = 0
+                            val snitt = tidBrukt / BATCH_SIZE.toDouble()
+                            val gjenståendeTid = Duration.ofMillis((gjenstående * snitt).toLong())
+                            log.info("brukt $tidBrukt ms på å hente $BATCH_SIZE personer, snitt $snitt ms per person. gjenstående $gjenstående personer, ca ${gjenståendeTid.toDaysPart()} dager ${gjenståendeTid.toHoursPart()} timer ${gjenståendeTid.toSecondsPart()} sekunder gjenstående")
+                        }
+                    }
+                    if (insertBatchCount > 0) {
+                        log.info("Utfører batch insert for $insertBatchCount personer")
+                        measureTimeMillis {
+                            insertStatement.executeLargeBatch()
+                            insertStatement.clearBatch()
+                        }.also {
+                            log.info("batch insert tok $it ms")
+                        }
                     }
                 }
             }
         }
     }
 
-    private fun migrerPersoner(fetchStatement: PreparedStatement, ider: List<Long>): Long {
+    private fun migrerPersoner(insertStatement: PreparedStatement, fetchStatement: PreparedStatement, ider: List<Long>): Long {
         ider.forEachIndexed { index, id -> fetchStatement.setLong(index + 1, id) }
         (ider.size until BATCH_SIZE).forEach { index ->
             fetchStatement.setLong(index + 1, 0)
@@ -68,7 +90,9 @@ internal class V2__Datalast : BaseJavaMigration() {
             val rs = fetchStatement.executeQuery()
             fetchStatement.clearParameters()
             while (rs.next()) {
-                val data = objectMapper.readTree(rs.getString("data"))
+                insertStatement.setLong(1, rs.getLong("fnr"))
+                insertStatement.setString(2, objectMapper.readTree(rs.getString("data")).path("aktivitetslogg").toString())
+                insertStatement.addBatch()
             }
         }
     }
@@ -89,8 +113,9 @@ internal class V2__Datalast : BaseJavaMigration() {
     }
 
     private companion object {
+        private const val INSERT_BATCH_SIZE = 5000
         private const val BATCH_SIZE = 100
-        private val log = LoggerFactory.getLogger(V2__Datalast::class.java)
+        private val log = LoggerFactory.getLogger(V3__Datalast::class.java)
         private val objectMapper = jacksonObjectMapper()
             .registerModule(JavaTimeModule())
 
@@ -104,7 +129,11 @@ internal class V2__Datalast : BaseJavaMigration() {
         """
         @Language("PostgreSQL")
         private val SELECT_JSON = """
-            select data from person where id IN (${0.until(BATCH_SIZE).joinToString { "?" }});
+            select fnr,data from person where id IN (${0.until(BATCH_SIZE).joinToString { "?" }});
+        """
+        @Language("PostgreSQL")
+        private val INSERT = """
+            INSERT INTO aktivitetslogg (fnr, data) VALUES (?, ?);
         """
     }
 }
