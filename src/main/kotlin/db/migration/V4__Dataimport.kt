@@ -80,7 +80,6 @@ internal class V4__Dataimport : BaseJavaMigration() {
                     }
                 }.also {
                     logg.info("batch [${pageCount.toString().padEnd(4)}] ferdig på $it ms | $rows personer hentet | snitt ${it/rows.toDouble()} ms per person")
-                    exitProcess(1)
                 }
             } while (rows > 0)
         }
