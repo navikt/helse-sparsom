@@ -18,6 +18,8 @@ internal class Aktivitet(
 ) {
     private val hash: String = DigestUtils.sha3_256Hex("$nivå$melding$tidsstempel${kontekster.hash()}")
     private var bleLagret: Boolean = false
+    private var meldingId: Long = -1
+    private var aktivitetId: Long = -1
 
     fun lagreMelding(statement: PreparedStatement) {
         statement.setString(1, melding)
@@ -34,9 +36,10 @@ internal class Aktivitet(
         kontekster.forEach { it.lagreKontekstVerdi(statement) }
     }
 
-    fun lagreAktivitet(statement: PreparedStatement, personident: String, hendelseId: Long?) {
-        statement.setString(1, melding)
-        statement.setString(2, personident)
+    fun lagreAktivitet(statement: PreparedStatement, personidentId: Long, hendelseId: Long?) {
+        check(meldingId != -1L) { "har ikke meldingid satt" }
+        statement.setLong(1, meldingId)
+        statement.setLong(2, personidentId)
         if (hendelseId != null) statement.setLong(3, hendelseId)
         else statement.setNull(3, Types.BIGINT)
         statement.setString(4, nivå.toString())
@@ -49,10 +52,27 @@ internal class Aktivitet(
         bleLagret = verdi
     }
 
+    fun meldingId(id: Long) {
+        meldingId = id
+    }
+
     fun kobleAktivitetOgKontekst(statement: PreparedStatement) {
         kontekster.forEach {
-            it.kobleAktivitetOgKontekst(statement, hash)
+            it.kobleAktivitetOgKontekst(statement, aktivitetId)
         }
+    }
+
+    fun kontekstTypeId(id: Long) =
+        kontekster.any { it.typeId(id) }
+
+    fun kontekstNavnId(id: Long) =
+        kontekster.any { it.navnId(id) }
+
+    fun kontekstVerdiId(id: Long) =
+        kontekster.any { it.verdiId(id) }
+
+    fun aktivitetId(id: Long) {
+        aktivitetId = id
     }
 
     internal companion object {
@@ -90,6 +110,10 @@ internal class Kontekst(
     @JsonAlias("kontekstmap")
     private val detaljer: Map<String, String>,
 ) {
+    private val detaljerliste = detaljer.toList()
+    private var id: Long? = null
+    private val detaljerId = mutableMapOf<Int, Pair<Long, Long?>>()
+
     internal fun toDto(hendelseId: Long, hash: String): List<KontekstDTO> {
         return detaljer.map { KontekstDTO(type, it.key, it.value, hash, hendelseId) }
     }
@@ -108,27 +132,55 @@ internal class Kontekst(
         statement.setString(1, type)
         statement.addBatch()
     }
+
     fun lagreKontekstNavn(statement: PreparedStatement) {
-        detaljer.forEach { (navn, verdi) ->
+        detaljerliste.forEach { (navn, verdi) ->
             statement.setString(1, navn)
             statement.addBatch()
         }
     }
     fun lagreKontekstVerdi(statement: PreparedStatement) {
-        detaljer.forEach { (navn, verdi) ->
+        detaljerliste.forEach { (navn, verdi) ->
             statement.setString(1, verdi)
             statement.addBatch()
         }
     }
 
-    fun kobleAktivitetOgKontekst(statement: PreparedStatement, hash: String) {
-        statement.setString(1, hash)
-        statement.setString(2, type)
-        detaljer.forEach { (navn, verdi) ->
-            statement.setString(3, navn)
-            statement.setString(4, verdi)
+    fun kobleAktivitetOgKontekst(statement: PreparedStatement, aktivitetId: Long) {
+        statement.setLong(1, aktivitetId)
+        statement.setLong(2, requireNotNull(this.id) { "har ikke kontekst id" })
+        detaljerId.values.forEach { (navn, verdi) ->
+            statement.setLong(3, navn)
+            statement.setLong(4, checkNotNull(verdi) { "har ikke id til verdi" })
             statement.addBatch()
         }
+    }
+
+    fun typeId(id: Long): Boolean {
+        if (this.id != null) return false
+        this.id = id
+        return true
+    }
+
+    fun navnId(id: Long): Boolean {
+        detaljerliste.forEachIndexed { index, _ ->
+            if (index !in detaljerId) {
+                detaljerId[index] = id to null
+                return true
+            }
+        }
+        return false
+    }
+
+    fun verdiId(id: Long): Boolean {
+        detaljerliste.forEachIndexed { index, _ ->
+            val value = detaljerId.getValue(index)
+            if (value.second == null) {
+                detaljerId.replace(index, value.first to id)
+                return true
+            }
+        }
+        return false
     }
 
     internal companion object {
