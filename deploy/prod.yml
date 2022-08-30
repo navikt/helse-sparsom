@@ -46,6 +46,10 @@ spec:
             value: "510848"
           - name: work_mem
             value: "5242880"
+          - name: effective_cache_size
+            value: "490733568"
+          - name: random_page_cost
+            value: "1.2"
   secureLogs:
     enabled: true
   env:
