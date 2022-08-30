@@ -42,14 +42,26 @@ spec:
           - name: sparsom
             envVarPrefix: DATABASE
         flags:
+          - name: max_connections
+            value: "100"
           - name: max_wal_size
             value: "510848"
           - name: work_mem
             value: "5242880"
+          - name: maintenance_work_mem
+            value: "536870912"
           - name: effective_cache_size
-            value: "490733568"
+            value: "57252249"
           - name: random_page_cost
             value: "1.2"
+          - name: max_worker_processes
+            value: "96"
+          - name: max_parallel_workers_per_gather
+            value: "4"
+          - name: max_parallel_workers
+            value: "80"
+          - name: max_parallel_maintenance_workers
+            value: "64"
   secureLogs:
     enabled: true
   env:
