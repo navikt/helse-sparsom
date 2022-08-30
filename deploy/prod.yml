@@ -41,6 +41,11 @@ spec:
         databases:
           - name: sparsom
             envVarPrefix: DATABASE
+        flags:
+          - name: max_wal_size
+            value: "510848"
+          - name: work_mem
+            value: "5242880"
   secureLogs:
     enabled: true
   env:
