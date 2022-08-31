@@ -63,9 +63,9 @@ internal class FikseForeignKey {
         @Language("PostgreSQL")
         private val SQL = """
 update aktivitet_denormalisert as a
-set melding_id = m.id
+set hendelse_id = m.id
 from melding as m
-where (a.id BETWEEN ? AND ?) AND a.melding_id IS NULL AND m.tekst=a.melding;
+where (a.id BETWEEN ? AND ?) AND a.hendelse_id IS NULL AND m.tekst=a.melding;
 """
     }
 }
