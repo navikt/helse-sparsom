@@ -66,7 +66,7 @@ internal class ImporterMeldinger {
                 if (rs.next()) {
                     val id = rs.getInt("id")
                     offset = Triple(id, rs.getInt("start_offset"), rs.getInt("end_offset"))
-                    connection.prepareStatement("UPDATE arbeidstabell SET startet=(CAST ? as timestamptz) WHERE id=?").use { updateStmt ->
+                    connection.prepareStatement("UPDATE arbeidstabell SET startet=CAST(? as timestamptz) WHERE id=?").use { updateStmt ->
                         updateStmt.setString(1, LocalDateTime.now().toString())
                         updateStmt.setInt(2, id)
                         updateStmt.execute()
