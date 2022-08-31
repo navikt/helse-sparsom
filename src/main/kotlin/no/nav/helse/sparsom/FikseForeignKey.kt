@@ -8,7 +8,12 @@ internal class FikseForeignKey {
 
     fun migrate(connection: Connection) = connection.use {
         it.autoCommit = false
-        utførMigrering(it)
+        try {
+            utførMigrering(it)
+        } catch (e: Exception) {
+            connection.rollback()
+            throw e
+        }
     }
 
     private fun utførMigrering(connection: Connection) {
