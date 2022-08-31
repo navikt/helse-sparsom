@@ -4,6 +4,7 @@ import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.PreparedStatement
+import java.time.LocalDateTime
 import kotlin.math.ceil
 
 internal class ImporterMeldinger {
@@ -20,7 +21,7 @@ internal class ImporterMeldinger {
 
     private fun utførMigrering(connection: Connection) {
         connection.prepareStatement(SQL).use { migration ->
-            connection.prepareStatement("UPDATE arbeidstabell SET ferdig=now() WHERE id=?;").use use2@{ updateLock ->
+            connection.prepareStatement("UPDATE arbeidstabell SET ferdig=CAST(? as timestamptz) WHERE id=?;").use use2@{ updateLock ->
                 var arbeid: Triple<Int, Int, Int>? = hentArbeid(connection) ?: return@use2
                 while (arbeid != null) {
                     /* utfør arbeid */
@@ -51,7 +52,8 @@ internal class ImporterMeldinger {
         migration.executeLargeBatch()
         migration.clearBatch()
         log.info("blokk id={}, startOffset={}, endOffset={} ferdig, oppdaterer ferdigtidspunkt for arbeidet", id, startOffset, endOffset)
-        updateLock.setInt(1, id)
+        updateLock.setString(1, LocalDateTime.now().toString())
+        updateLock.setInt(2, id)
         updateLock.execute()
     }
 
@@ -64,8 +66,9 @@ internal class ImporterMeldinger {
                 if (rs.next()) {
                     val id = rs.getInt("id")
                     offset = Triple(id, rs.getInt("start_offset"), rs.getInt("end_offset"))
-                    connection.prepareStatement("UPDATE arbeidstabell SET startet=now() WHERE id=?").use { updateStmt ->
-                        updateStmt.setInt(1, id)
+                    connection.prepareStatement("UPDATE arbeidstabell SET startet=(CAST ? as timestamptz) WHERE id=?").use { updateStmt ->
+                        updateStmt.setString(1, LocalDateTime.now().toString())
+                        updateStmt.setInt(2, id)
                         updateStmt.execute()
                     }
                 }
