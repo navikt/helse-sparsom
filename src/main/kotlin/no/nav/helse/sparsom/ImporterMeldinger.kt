@@ -6,7 +6,7 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 import kotlin.math.ceil
 
-internal class FikseForeignKey {
+internal class ImporterMeldinger {
 
     fun migrate(connection: Connection) = connection.use {
         it.autoCommit = false
@@ -77,16 +77,16 @@ internal class FikseForeignKey {
     }
 
     private companion object {
-        private val log = LoggerFactory.getLogger(FikseForeignKey::class.java)
+        private val log = LoggerFactory.getLogger(ImporterMeldinger::class.java)
 
         private const val BATCH_SIZE = 100_000
 
         @Language("PostgreSQL")
         private val SQL = """
-update aktivitet_denormalisert as a
-set hendelse_id = m.id
-from melding as m
-where (a.id BETWEEN ? AND ?) AND a.hendelse_id IS NULL AND m.tekst=a.melding;
+insert into aktivitet(denormalisert_id, melding_id, personident_id, level, tidsstempel, hash)
+select id, COALESCE(hendelse_id, 0), personident_id, level, tidsstempel, hash
+from aktivitet_denormalisert a where (a.id BETWEEN ? AND ?)
+on conflict do nothing;
 """
     }
 }
