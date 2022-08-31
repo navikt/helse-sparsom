@@ -21,6 +21,7 @@ private fun createApp(env: Map<String, String>): RapidsConnection {
         register(object : RapidsConnection.StatusListener {
             override fun onStartup(rapidsConnection: RapidsConnection) {
                 dataSourceBuilder.migrate()
+                FikseForeignKey().migrate(dataSource.connection)
             }
 
             override fun onShutdown(rapidsConnection: RapidsConnection) {
