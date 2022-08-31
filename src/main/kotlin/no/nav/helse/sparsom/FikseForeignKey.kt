@@ -39,7 +39,7 @@ internal class FikseForeignKey {
     private fun hentArbeid(connection: Connection): Triple<Int, Int, Int>? {
         log.info("henter arbeid")
         var offset: Triple<Int, Int, Int>? = null
-        connection.createStatement().use { it.execute("LOCK arbeidstabell IN ACCESS EXCLUSIVE;") }
+        connection.createStatement().use { it.execute("LOCK TABLE arbeidstabell IN ACCESS EXCLUSIVE MODE;") }
         connection.prepareStatement("SELECT * FROM arbeidstabell WHERE startet IS NULL LIMIT 1;").use { stmt ->
             stmt.executeQuery().use { rs ->
                 if (rs.next()) {
