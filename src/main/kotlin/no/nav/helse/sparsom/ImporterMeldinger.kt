@@ -36,9 +36,14 @@ internal class ImporterMeldinger {
     }
 
     private fun utførArbeid(migration: PreparedStatement, updateLock: PreparedStatement, id: Int, startOffset: Int, endOffset: Int) {
+
+        log.info("blokk id={}, startOffset={}, endOffset={} starter", id, startOffset, endOffset)
+        migration.setInt(1, startOffset)
+        migration.setInt(2, endOffset)
+        migration.execute()
+        /*
         val batches = ceil((endOffset - startOffset) / BATCH_SIZE.toDouble()).toInt()
         log.info("bryter blokk id={}, startOffset={}, endOffset={} ned i {} batches", id, startOffset, endOffset, batches)
-
         var start = startOffset
         0.until(batches).forEach { batchIndex ->
             val end = (start + BATCH_SIZE - 1).coerceAtMost(endOffset)
@@ -50,7 +55,7 @@ internal class ImporterMeldinger {
         }
         log.info("utfører batch")
         migration.executeLargeBatch()
-        migration.clearBatch()
+        migration.clearBatch()*/
         log.info("blokk id={}, startOffset={}, endOffset={} ferdig, oppdaterer ferdigtidspunkt for arbeidet", id, startOffset, endOffset)
         updateLock.setString(1, LocalDateTime.now().toString())
         updateLock.setInt(2, id)
