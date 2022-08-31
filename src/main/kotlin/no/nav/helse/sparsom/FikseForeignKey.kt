@@ -40,7 +40,7 @@ internal class FikseForeignKey {
 
         var start = startOffset
         0.until(batches).forEach { batchIndex ->
-            val end = (start + BATCH_SIZE).coerceAtMost(endOffset)
+            val end = (start + BATCH_SIZE - 1).coerceAtMost(endOffset)
             migration.setInt(1, start)
             migration.setInt(2, end)
             migration.addBatch()
