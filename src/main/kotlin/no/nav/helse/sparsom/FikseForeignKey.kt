@@ -3,6 +3,8 @@ package no.nav.helse.sparsom
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
 import java.sql.Connection
+import java.sql.PreparedStatement
+import kotlin.math.ceil
 
 internal class FikseForeignKey {
 
@@ -17,23 +19,39 @@ internal class FikseForeignKey {
     }
 
     private fun utførMigrering(connection: Connection) {
-        var arbeid = hentArbeid(connection)
-        while (arbeid != null) {
-            /* utfør arbeid */
-            val (id, startOffset, endOffset) = arbeid
-            connection.prepareStatement(SQL).use { stmt ->
-                stmt.setInt(1, startOffset)
-                stmt.setInt(2, endOffset)
-                stmt.execute()
+        connection.prepareStatement(SQL).use { migration ->
+            connection.prepareStatement("UPDATE arbeidstabell SET ferdig=now() WHERE id=?;").use use2@{ updateLock ->
+                var arbeid: Triple<Int, Int, Int>? = hentArbeid(connection) ?: return@use2
+                while (arbeid != null) {
+                    /* utfør arbeid */
+                    val (id, startOffset, endOffset) = arbeid
+                    utførArbeid(migration, updateLock, id, startOffset, endOffset)
+                    migration.execute()
+                    connection.commit()
+                    arbeid = hentArbeid(connection)
+                }
             }
-            log.info("blok {} ferdig, oppdaterer ferdigtidspunkt for arbeidet", arbeid)
-            connection.prepareStatement("UPDATE arbeidstabell SET ferdig=now() WHERE id=?;").use { stmt ->
-                stmt.setInt(1, id)
-                stmt.execute()
-            }
-            connection.commit()
-            arbeid = hentArbeid(connection)
         }
+    }
+
+    private fun utførArbeid(migration: PreparedStatement, updateLock: PreparedStatement, id: Int, startOffset: Int, endOffset: Int) {
+        val batches = ceil((endOffset - startOffset) / BATCH_SIZE.toDouble()).toInt()
+        log.info("bryter blokk id={}, startOffset={}, endOffset={} ned i {} batches", id, startOffset, endOffset, batches)
+
+        var start = startOffset
+        0.until(batches).forEach { batchIndex ->
+            val end = (start + BATCH_SIZE).coerceAtMost(endOffset)
+            migration.setInt(1, start)
+            migration.setInt(2, end)
+            migration.addBatch()
+            log.info("batch #{} start={}, end={}", batchIndex + 1, start, end)
+            start = end + 1
+        }
+        log.info("utfører batch")
+        migration.executeLargeBatch()
+        log.info("blokk id={}, startOffset={}, endOffset={} ferdig, oppdaterer ferdigtidspunkt for arbeidet", id, startOffset, endOffset)
+        updateLock.setInt(1, id)
+        updateLock.execute()
     }
 
     private fun hentArbeid(connection: Connection): Triple<Int, Int, Int>? {
@@ -59,6 +77,8 @@ internal class FikseForeignKey {
 
     private companion object {
         private val log = LoggerFactory.getLogger(FikseForeignKey::class.java)
+
+        private const val BATCH_SIZE = 100_000
 
         @Language("PostgreSQL")
         private val SQL = """
