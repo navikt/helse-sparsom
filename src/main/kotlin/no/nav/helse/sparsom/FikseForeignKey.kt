@@ -26,7 +26,7 @@ internal class FikseForeignKey {
                     /* utfør arbeid */
                     val (id, startOffset, endOffset) = arbeid
                     utførArbeid(migration, updateLock, id, startOffset, endOffset)
-                    migration.execute()
+                    log.info("committer ferdig utført arbeid")
                     connection.commit()
                     arbeid = hentArbeid(connection)
                 }
@@ -49,6 +49,7 @@ internal class FikseForeignKey {
         }
         log.info("utfører batch")
         migration.executeLargeBatch()
+        migration.clearBatch()
         log.info("blokk id={}, startOffset={}, endOffset={} ferdig, oppdaterer ferdigtidspunkt for arbeidet", id, startOffset, endOffset)
         updateLock.setInt(1, id)
         updateLock.execute()
