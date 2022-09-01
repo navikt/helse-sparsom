@@ -37,11 +37,11 @@ internal class ImporterMeldinger {
 
     private fun utførArbeid(migration: PreparedStatement, updateLock: PreparedStatement, id: Int, startOffset: Int, endOffset: Int) {
 
-        log.info("blokk id={}, startOffset={}, endOffset={} starter", id, startOffset, endOffset)
+        /*log.info("blokk id={}, startOffset={}, endOffset={} starter", id, startOffset, endOffset)
         migration.setInt(1, startOffset)
         migration.setInt(2, endOffset)
-        migration.execute()
-        /*
+        migration.execute()*/
+
         val batches = ceil((endOffset - startOffset) / BATCH_SIZE.toDouble()).toInt()
         log.info("bryter blokk id={}, startOffset={}, endOffset={} ned i {} batches", id, startOffset, endOffset, batches)
         var start = startOffset
@@ -55,7 +55,7 @@ internal class ImporterMeldinger {
         }
         log.info("utfører batch")
         migration.executeLargeBatch()
-        migration.clearBatch()*/
+        migration.clearBatch()
         log.info("blokk id={}, startOffset={}, endOffset={} ferdig, oppdaterer ferdigtidspunkt for arbeidet", id, startOffset, endOffset)
         updateLock.setString(1, LocalDateTime.now().toString())
         updateLock.setInt(2, id)
@@ -87,7 +87,7 @@ internal class ImporterMeldinger {
     private companion object {
         private val log = LoggerFactory.getLogger(ImporterMeldinger::class.java)
 
-        private const val BATCH_SIZE = 100_000
+        private const val BATCH_SIZE = 50_000
 
         @Language("PostgreSQL")
         private val SQL = """
