@@ -66,15 +66,15 @@ internal class ImporterMeldinger {
         log.info("henter arbeid")
         var offset: Triple<Int, Int, Int>? = null
 
-        connection.prepareStatement("SELECT * FROM arbeidstabell WHERE startet IS NULL LIMIT 1 FOR UPDATE;").use { stmt ->
+        connection.prepareStatement("SELECT * FROM arbeidstabell WHERE startet IS NULL LIMIT 1 FOR UPDATE SKIP LOCKED;").use { stmt ->
             stmt.executeQuery().use { rs ->
                 if (rs.next()) {
                     val id = rs.getInt("id")
                     offset = Triple(id, rs.getInt("start_offset"), rs.getInt("end_offset"))
-                    connection.prepareStatement("UPDATE arbeidstabell SET startet=CAST(? as timestamptz) WHERE id=?").use { updateStmt ->
+                    connection.prepareStatement("UPDATE arbeidstabell SET startet=CAST(? as timestamptz) WHERE id=? AND startet IS NOT NULL;").use { updateStmt ->
                         updateStmt.setString(1, LocalDateTime.now().toString())
                         updateStmt.setInt(2, id)
-                        updateStmt.execute()
+                        check(1 == updateStmt.executeUpdate()) { "prøvde å oppdatere en arbeidsrad som noen andre har endret på!" }
                     }
                 }
             }
