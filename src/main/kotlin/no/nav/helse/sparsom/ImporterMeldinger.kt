@@ -71,7 +71,7 @@ internal class ImporterMeldinger {
                 if (rs.next()) {
                     val id = rs.getInt("id")
                     offset = Triple(id, rs.getInt("start_offset"), rs.getInt("end_offset"))
-                    connection.prepareStatement("UPDATE arbeidstabell SET startet=CAST(? as timestamptz) WHERE id=? AND startet IS NOT NULL;").use { updateStmt ->
+                    connection.prepareStatement("UPDATE arbeidstabell SET startet=CAST(? as timestamptz) WHERE id=? AND startet IS NULL;").use { updateStmt ->
                         updateStmt.setString(1, LocalDateTime.now().toString())
                         updateStmt.setInt(2, id)
                         check(1 == updateStmt.executeUpdate()) { "prøvde å oppdatere en arbeidsrad som noen andre har endret på!" }
