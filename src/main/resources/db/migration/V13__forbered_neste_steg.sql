@@ -1,0 +1,1 @@
+create index if not exists idx_aktivitet_kontekst_verdi on aktivitet_kontekst_denormalisert(kontekst_verdi);
