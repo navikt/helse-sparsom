@@ -14,14 +14,13 @@ fun main() {
 private fun createApp(env: Map<String, String>): RapidsConnection {
     val dataSourceBuilder = DataSourceBuilder(env)
     val dataSource by lazy { dataSourceBuilder.getDataSource() }
-
+    ImporterMeldinger().migrate(dataSource.connection)
     return RapidApplication.create(env).apply {
         val aktivitetFactory = AktivitetFactory(AktivitetDao(dataSource))
         AktivitetRiver(this, HendelseDao { dataSource }, aktivitetFactory)
         register(object : RapidsConnection.StatusListener {
             override fun onStartup(rapidsConnection: RapidsConnection) {
                 dataSourceBuilder.migrate()
-                ImporterMeldinger().migrate(dataSource.connection)
             }
 
             override fun onShutdown(rapidsConnection: RapidsConnection) {
