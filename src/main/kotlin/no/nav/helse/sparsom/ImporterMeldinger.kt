@@ -37,11 +37,12 @@ internal class ImporterMeldinger {
 
     private fun utførArbeid(migration: PreparedStatement, updateLock: PreparedStatement, id: Int, startOffset: Int, endOffset: Int) {
 
-        /*log.info("blokk id={}, startOffset={}, endOffset={} starter", id, startOffset, endOffset)
+        log.info("blokk id={}, startOffset={}, endOffset={} starter", id, startOffset, endOffset)
         migration.setInt(1, startOffset)
         migration.setInt(2, endOffset)
-        migration.execute()*/
+        migration.execute()
 
+        /*
         val batches = ceil((endOffset - startOffset) / BATCH_SIZE.toDouble()).toInt()
         log.info("bryter blokk id={}, startOffset={}, endOffset={} ned i {} batches", id, startOffset, endOffset, batches)
         var start = startOffset
@@ -55,7 +56,7 @@ internal class ImporterMeldinger {
         }
         log.info("utfører batch")
         migration.executeLargeBatch()
-        migration.clearBatch()
+        migration.clearBatch()*/
         log.info("blokk id={}, startOffset={}, endOffset={} ferdig, oppdaterer ferdigtidspunkt for arbeidet", id, startOffset, endOffset)
         updateLock.setString(1, LocalDateTime.now().toString())
         updateLock.setInt(2, id)
@@ -91,10 +92,15 @@ internal class ImporterMeldinger {
 
         @Language("PostgreSQL")
         private val SQL = """
-insert into aktivitet(denormalisert_id, melding_id, personident_id, level, tidsstempel, hash)
-select id, COALESCE(hendelse_id, 0), personident_id, level, tidsstempel, hash
-from aktivitet_denormalisert a where (a.id BETWEEN ? AND ?)
-on conflict do nothing;
+insert into aktivitet_kontekst(aktivitet_id, kontekst_type_id, kontekst_navn_id, kontekst_verdi_id)
+select a.id, kt.id, kn.id, kv.id from aktivitet a
+inner join aktivitet_kontekst_denormalisert akd on a.denormalisert_id = akd.aktivitet_id
+inner join kontekst_type kt on akd.kontekst_type = kt.type
+inner join kontekst_navn kn on akd.kontekst_navn=kn.navn
+inner join kontekst_verdi kv on akd.kontekst_verdi=kv.verdi
+where a.denormalisert_id is not null and (a.denormalisert_id between ? and ?)
+on conflict do nothing
+;
 """
     }
 }
