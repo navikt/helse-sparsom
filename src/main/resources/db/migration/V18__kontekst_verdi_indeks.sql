@@ -1,0 +1,1 @@
+create index if not exists idx_aktivitet_kontekst_kontekst_verdi_id on aktivitet_kontekst(kontekst_verdi_id);
