@@ -98,7 +98,7 @@ inner join aktivitet_kontekst_denormalisert akd on a.denormalisert_id = akd.akti
 inner join kontekst_type kt on akd.kontekst_type = kt.type
 inner join kontekst_navn kn on akd.kontekst_navn=kn.navn
 inner join kontekst_verdi kv on akd.kontekst_verdi=kv.verdi
-where a.denormalisert_id is not null and (a.denormalisert_id between ? and ?)
+where (akd.aktivitet_id between ? and ?)
 on conflict do nothing
 ;
 """
