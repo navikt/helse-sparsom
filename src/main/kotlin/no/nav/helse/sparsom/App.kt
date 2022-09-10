@@ -19,7 +19,6 @@ private fun createApp(env: Map<String, String>): RapidsConnection {
         AktivitetRiver(this, HendelseDao { dataSource }, aktivitetFactory)
         register(object : RapidsConnection.StatusListener {
             override fun onStartup(rapidsConnection: RapidsConnection) {
-                ImporterMeldinger().migrate(dataSource.connection)
                 dataSourceBuilder.migrate()
             }
 
