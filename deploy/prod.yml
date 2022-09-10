@@ -19,7 +19,7 @@ spec:
   resources:
     limits:
       cpu: 2000m
-      memory: 6Gi
+      memory: 2Gi
     requests:
       cpu: 50m
       memory: 512Mi
@@ -37,7 +37,7 @@ spec:
       - type: POSTGRES_14
         diskAutoresize: true
         tier: db-custom-96-638976
-        pointInTimeRecovery: false
+        pointInTimeRecovery: true
         databases:
           - name: sparsom
             envVarPrefix: DATABASE
@@ -47,9 +47,9 @@ spec:
           - name: max_wal_size
             value: "510848"
           - name: work_mem
-            value: "5242880"
+            value: "15728640"
           - name: maintenance_work_mem
-            value: "536870912"
+            value: "268435456"
           - name: effective_cache_size
             value: "57252249"
           - name: random_page_cost
