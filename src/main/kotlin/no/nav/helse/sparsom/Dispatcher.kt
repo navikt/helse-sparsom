@@ -55,11 +55,11 @@ internal class Work(private val id: Int, private val ident: String, private val 
     internal fun detaljer() = listOf(ident.toLong())
 
     internal fun begin() {
-        log.info("blokk id={}, ident={} starter", id, ident)
+        log.info("blokk id={} starter", id)
     }
 
     internal fun done() {
-        log.info("blokk id={}, ident={} ferdig, oppdaterer ferdigtidspunkt for arbeidet", id, ident)
+        log.info("blokk id={} ferdig, oppdaterer ferdigtidspunkt for arbeidet", id)
         updateLock.setString(1, LocalDateTime.now().toString())
         updateLock.setInt(2, id)
         updateLock.execute()
