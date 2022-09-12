@@ -23,6 +23,7 @@ internal class AktivitetRiver(
                 it.demandValue("@event_name", "aktivitetslogg_ny_aktivitet")
                 it.requireKey("fødselsnummer", "@id", "@opprettet")
                 it.requireArray("aktiviteter") {
+                    require("id") { UUID.fromString(it.asText()) }
                     requireAny("nivå", Nivå.values().map { nivå -> nivå.toString() })
                     requireKey("melding")
                     require("tidsstempel", JsonNode::asLocalDateTime)

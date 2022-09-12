@@ -32,6 +32,8 @@ spec:
     path: /metrics
   kafka:
     pool: nav-prod
+  envFrom:
+    - secret: google-sql-spleis-spleis-sparsom-e28cfed2
   gcp:
     sqlInstances:
       - type: POSTGRES_14
@@ -75,3 +77,7 @@ spec:
       value: "10"
     - name: KAFKA_MAX_POLL_INTERVAL_MS
       value: "1200000"
+    - name: DATABASE_SPARSOM_REGION
+      value: "europe-north1"
+    - name: DATABASE_SPARSOM_INSTANCE
+      value: "helse-spleis"

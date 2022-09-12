@@ -3,6 +3,7 @@
   "fødselsnummer": "12345678910",
   "aktiviteter": [
     {
+      "id": "00b81ddc-1f40-47be-ae27-e0130ad4a219",
       "nivå": "INFO",
       "melding": "Behandler historiske utbetalinger og inntekter",
       "tidsstempel": "2022-08-22T16:17:40.559",
@@ -26,6 +27,7 @@
       ]
     },
     {
+      "id": "0e3bd909-9709-45f1-8605-5d2d7b61b64e",
       "nivå": "INFO",
       "melding": "Mangler vilkårsgrunnlag for 2022-05-01",
       "tidsstempel": "2022-08-22T16:17:40.564",

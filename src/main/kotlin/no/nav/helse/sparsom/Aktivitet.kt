@@ -8,15 +8,16 @@ import org.slf4j.LoggerFactory
 import java.sql.PreparedStatement
 import java.sql.Types
 import java.time.LocalDateTime
+import java.util.*
 import kotlin.system.measureTimeMillis
 
 internal class Aktivitet(
+    private val id: UUID,
     private val nivå: Nivå,
     private val melding: String,
     private val tidsstempel: LocalDateTime,
     private val kontekster: List<Kontekst>
 ) {
-    private val hash: String = DigestUtils.sha3_256Hex("$nivå$melding$tidsstempel${kontekster.hash()}")
     private var bleLagret: Boolean = false
     private var meldingId: Long = -1
     private var aktivitetId: Long = -1
@@ -44,7 +45,7 @@ internal class Aktivitet(
         else statement.setNull(3, Types.BIGINT)
         statement.setString(4, nivå.toString())
         statement.setString(5, tidsstempel.toString())
-        statement.setString(6, hash)
+        statement.setString(6, id.toString())
         statement.addBatch()
     }
 
@@ -112,6 +113,9 @@ internal class Kontekst(
 ) {
     private val detaljerliste = detaljer.toList()
     private var id: Long? = null
+    private var lagret: Boolean = false
+    private var lagretKontekstNavn: Boolean = false
+    private var lagretKontekstVerdi: Boolean = false
     private val detaljerId = mutableMapOf<Int, Pair<Long, Long?>>()
 
     internal fun toDto(hendelseId: Long, hash: String): List<KontekstDTO> {
@@ -129,17 +133,23 @@ internal class Kontekst(
         }
     }
     fun lagreKontekstType(statement: PreparedStatement) {
+        if (lagret) return
+        lagret = true
         statement.setString(1, type)
         statement.addBatch()
     }
 
     fun lagreKontekstNavn(statement: PreparedStatement) {
+        if (lagretKontekstNavn) return
+        lagretKontekstNavn = true
         detaljerliste.forEach { (navn, verdi) ->
             statement.setString(1, navn)
             statement.addBatch()
         }
     }
     fun lagreKontekstVerdi(statement: PreparedStatement) {
+        if (lagretKontekstVerdi) return
+        lagretKontekstVerdi = true
         detaljerliste.forEach { (navn, verdi) ->
             statement.setString(1, verdi)
             statement.addBatch()

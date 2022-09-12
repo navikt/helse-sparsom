@@ -17,9 +17,7 @@ internal class DataSourceBuilder(env: Map<String, String>) {
     private val databaseUsername: String = requireNotNull(env["DATABASE_USERNAME"]) { "brukernavn må settes" }
     private val databasePassword: String = requireNotNull(env["DATABASE_PASSWORD"]) { "passord må settes" }
 
-    private val dbUrl = String.format(
-        "jdbc:postgresql://%s:%s/%s", databaseHost, databasePort, databaseName
-    )
+    private val dbUrl = String.format("jdbc:postgresql://%s:%s/%s", databaseHost, databasePort, databaseName)
 
     private val hikariConfig = HikariConfig().apply {
         jdbcUrl = dbUrl

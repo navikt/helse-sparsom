@@ -53,9 +53,9 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
         """
         @Language("PostgreSQL")
         private val AKTIVITET_INSERT = """
-            INSERT INTO aktivitet(melding_id, personident_id, hendelse_id, level, tidsstempel, hash) 
-            VALUES(?, ?, ?, CAST(? AS LEVEL), CAST(? AS timestamptz), ?) 
-            ON CONFLICT (hash) 
+            INSERT INTO aktivitet(melding_id, personident_id, hendelse_id, level, tidsstempel, aktivitet_uuid) 
+            VALUES(?, ?, ?, CAST(? AS LEVEL), CAST(? AS timestamptz), CAST(? AS uuid)) 
+            ON CONFLICT (aktivitet_uuid) 
             DO UPDATE SET level=EXCLUDED.level
             RETURNING id;
         """

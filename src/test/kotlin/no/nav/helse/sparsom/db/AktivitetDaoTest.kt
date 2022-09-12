@@ -31,7 +31,7 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
         val hendelseId = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
         aktivitetDao.lagre(
             aktiviteter = listOf(
-                Aktivitet(INFO, "en melding", LocalDateTime.now(), listOf(Kontekst("Person", mapOf("fødselsnummer" to fødselsnummer))))
+                Aktivitet(UUID.randomUUID(), INFO, "en melding", LocalDateTime.now(), listOf(Kontekst("Person", mapOf("fødselsnummer" to fødselsnummer))))
             ),
             personident = fødselsnummer,
             hendelseId = hendelseId
@@ -45,7 +45,7 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
         val hendelseId = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
         aktivitetDao.lagre(
             listOf(
-                Aktivitet(INFO, "en melding", LocalDateTime.now(), listOf(
+                Aktivitet(UUID.randomUUID(), INFO, "en melding", LocalDateTime.now(), listOf(
                     Kontekst("Person", mapOf(
                         "fødselsnummer" to fødselsnummer
                     )),
@@ -67,7 +67,7 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
         val hendelseId2 = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
         aktivitetDao.lagre(
             listOf(
-                Aktivitet(INFO, "en melding", LocalDateTime.now(), listOf(
+                Aktivitet(UUID.randomUUID(), INFO, "en melding", LocalDateTime.now(), listOf(
                     Kontekst("Person", mapOf(
                         "fødselsnummer" to fødselsnummer
                     ))
@@ -77,7 +77,7 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
             hendelseId1
         )
         aktivitetDao.lagre(
-            listOf(Aktivitet(INFO, "en annen melding", LocalDateTime.now(), listOf(
+            listOf(Aktivitet(UUID.randomUUID(), INFO, "en annen melding", LocalDateTime.now(), listOf(
                 Kontekst("Person", mapOf(
                     "fødselsnummer" to fødselsnummer
                 )),
@@ -97,8 +97,9 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
         val hendelseId1 = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
         val hendelseId2 = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
         val tidsstempel = LocalDateTime.now()
-        val aktivitet1 = Aktivitet(INFO, "melding", tidsstempel, listOf(Kontekst("Person", mapOf("fødselsnummer" to fødselsnummer))))
-        val aktivitet1Kopi = Aktivitet(INFO, "melding", tidsstempel, listOf(Kontekst("Person", mapOf("fødselsnummer" to fødselsnummer))))
+        val id = UUID.randomUUID()
+        val aktivitet1 = Aktivitet(id, INFO, "melding", tidsstempel, listOf(Kontekst("Person", mapOf("fødselsnummer" to fødselsnummer))))
+        val aktivitet1Kopi = Aktivitet(id, INFO, "melding", tidsstempel, listOf(Kontekst("Person", mapOf("fødselsnummer" to fødselsnummer))))
         aktivitetDao.lagre(
             listOf(aktivitet1),
             fødselsnummer,
@@ -107,7 +108,7 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
         aktivitetDao.lagre(
             listOf(
                 aktivitet1Kopi,
-                Aktivitet(INFO, "annen melding", LocalDateTime.now(), listOf(
+                Aktivitet(UUID.randomUUID(), INFO, "annen melding", LocalDateTime.now(), listOf(
                     Kontekst("Person", mapOf(
                         "fødselsnummer" to "01987654321"
                     )
@@ -125,8 +126,9 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
         val hendelseId1 = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
         val hendelseId2 = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
         val tidsstempel = LocalDateTime.now()
+        val id = UUID.randomUUID()
         aktivitetDao.lagre(
-            listOf(Aktivitet(INFO, "melding", tidsstempel, listOf(
+            listOf(Aktivitet(id, INFO, "melding", tidsstempel, listOf(
                 Kontekst("Person", mapOf(
                     "fødselsnummer" to fødselsnummer
                 ))
@@ -135,7 +137,7 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
             hendelseId1
         )
         aktivitetDao.lagre(
-            listOf(Aktivitet(INFO, "melding", tidsstempel, listOf(
+            listOf(Aktivitet(id, INFO, "melding", tidsstempel, listOf(
                 Kontekst("Person", mapOf(
                     "fødselsnummer" to fødselsnummer
                 ))
@@ -153,8 +155,9 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
         val hendelseId2 = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
         val tidsstempel = LocalDateTime.now()
         val vedtaksperiodeid = UUID.randomUUID()
+        val id = UUID.randomUUID()
         aktivitetDao.lagre(
-            listOf(Aktivitet(INFO, "en melding", tidsstempel, listOf(
+            listOf(Aktivitet(id, INFO, "en melding", tidsstempel, listOf(
                 Kontekst("Person", mapOf(
                     "fødselsnummer" to fødselsnummer
                 )),
@@ -166,7 +169,7 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
             hendelseId
         )
         aktivitetDao.lagre(
-            listOf(Aktivitet(INFO, "en melding", tidsstempel, listOf(
+            listOf(Aktivitet(id, INFO, "en melding", tidsstempel, listOf(
                 Kontekst("Person", mapOf(
                     "fødselsnummer" to fødselsnummer
                 )),
