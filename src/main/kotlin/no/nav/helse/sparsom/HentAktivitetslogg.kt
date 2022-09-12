@@ -14,16 +14,14 @@ import kotlin.system.measureTimeMillis
 
 internal class HentAktivitetslogg(private val dispatcher: Dispatcher) {
 
-    fun migrate(connection: Connection, spleisConnection: Connection) = connection.use {
-        spleisConnection.use {
-            connection.autoCommit = false
-            spleisConnection.autoCommit = false
-            try {
-                utførMigrering(connection, spleisConnection)
-            } catch (e: Exception) {
-                connection.rollback()
-                throw e
-            }
+    fun migrate(connection: Connection, spleisConnection: Connection) = spleisConnection.use {
+        connection.autoCommit = false
+        spleisConnection.autoCommit = false
+        try {
+            utførMigrering(connection, spleisConnection)
+        } catch (e: Exception) {
+            connection.rollback()
+            throw e
         }
     }
 
