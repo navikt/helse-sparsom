@@ -11,6 +11,7 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 internal class ImporterAktivitetslogg(private val dispatcher: Dispatcher) {
 
@@ -70,6 +71,7 @@ internal class ImporterAktivitetslogg(private val dispatcher: Dispatcher) {
                         .map { it.intValue() }
                         .map { kontekster[it] }
                     Aktivitet(
+                        id = UUID.fromString(aktivitet.path("id").asText()),
                         nivå = nivå,
                         melding = aktivitet.path("melding").asText(),
                         tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText(), tidsstempelformat),
