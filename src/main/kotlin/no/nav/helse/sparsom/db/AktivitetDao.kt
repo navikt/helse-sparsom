@@ -75,6 +75,46 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
 
     override fun lagre(aktiviteter: List<Aktivitet>, personident: String, hendelseId: Long?) {
         makeConnection { connection ->
+            connection.prepareStatement(KONTEKST_TYPE_INSERT, RETURN_GENERATED_KEYS).use { statement ->
+                aktiviteter.forEach { it.lagreKontekstType(statement) }
+                statement.executeLargeBatch()
+                statement.generatedKeys.use { rs ->
+                    while (rs.next()) {
+                        val id = rs.getLong(1)
+                        check(aktiviteter.any { it.kontekstTypeId(id) }) {
+                            "forventet at noen trengte id til konteksttype"
+                        }
+                    }
+                }
+            }
+            if (!connection.autoCommit) connection.commit()
+            connection.prepareStatement(KONTEKST_NAVN_INSERT, RETURN_GENERATED_KEYS).use { statement ->
+                aktiviteter.forEach { it.lagreKontekstNavn(statement) }
+                statement.executeLargeBatch()
+                statement.generatedKeys.use { rs ->
+                    while (rs.next()) {
+                        val id = rs.getLong(1)
+                        check(aktiviteter.any { it.kontekstNavnId(id) }) {
+                            "forventet at noen trengte id til kontekstnavn"
+                        }
+                    }
+                }
+            }
+            if (!connection.autoCommit) connection.commit()
+            connection.prepareStatement(KONTEKST_VERDI_INSERT, RETURN_GENERATED_KEYS).use { statement ->
+                aktiviteter.forEach { it.lagreKontekstVerdi(statement) }
+                statement.executeLargeBatch()
+                statement.generatedKeys.use { rs ->
+                    while (rs.next()) {
+                        val id = rs.getLong(1)
+                        check(aktiviteter.any { it.kontekstVerdiId(id) }) {
+                            "forventet at noen trengte id til kontekstverdi"
+                        }
+                    }
+                }
+            }
+            if (!connection.autoCommit) connection.commit()
+
             var personidentId: Long = 0L
             connection.prepareStatement(PERSON_INSERT, RETURN_GENERATED_KEYS).use { statement ->
                 statement.setString(1, personident)
@@ -100,44 +140,7 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                     }
                 }
             }
-            connection.commit()
-            connection.prepareStatement(KONTEKST_TYPE_INSERT, RETURN_GENERATED_KEYS).use { statement ->
-                aktiviteter.forEach { it.lagreKontekstType(statement) }
-                statement.executeLargeBatch()
-                statement.generatedKeys.use { rs ->
-                    while (rs.next()) {
-                        val id = rs.getLong(1)
-                        check(aktiviteter.any { it.kontekstTypeId(id) }) {
-                            "forventet at noen trengte id til konteksttype"
-                        }
-                    }
-                }
-            }
-            connection.prepareStatement(KONTEKST_NAVN_INSERT, RETURN_GENERATED_KEYS).use { statement ->
-                aktiviteter.forEach { it.lagreKontekstNavn(statement) }
-                statement.executeLargeBatch()
-                statement.generatedKeys.use { rs ->
-                    while (rs.next()) {
-                        val id = rs.getLong(1)
-                        check(aktiviteter.any { it.kontekstNavnId(id) }) {
-                            "forventet at noen trengte id til kontekstnavn"
-                        }
-                    }
-                }
-            }
-            connection.prepareStatement(KONTEKST_VERDI_INSERT, RETURN_GENERATED_KEYS).use { statement ->
-                aktiviteter.forEach { it.lagreKontekstVerdi(statement) }
-                statement.executeLargeBatch()
-                statement.generatedKeys.use { rs ->
-                    while (rs.next()) {
-                        val id = rs.getLong(1)
-                        check(aktiviteter.any { it.kontekstVerdiId(id) }) {
-                            "forventet at noen trengte id til kontekstverdi"
-                        }
-                    }
-                }
-            }
-            connection.commit()
+            if (!connection.autoCommit) connection.commit()
             connection.prepareStatement(AKTIVITET_INSERT, RETURN_GENERATED_KEYS).use { statement ->
                 aktiviteter.forEach { it.lagreAktivitet(statement, personidentId, hendelseId) }
                 statement.executeLargeBatch().onEachIndexed { index, affectedRows ->
@@ -156,11 +159,12 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                     }
                 }
             }
-            connection.commit()
+            if (!connection.autoCommit) connection.commit()
             connection.prepareStatement(AKTIVITET_KONTEKST_INSERT).use { statement ->
                 aktiviteter.forEach { it.kobleAktivitetOgKontekst(statement) }
                 statement.executeLargeBatch()
             }
+            if (!connection.autoCommit) connection.commit()
         }
     }
 }
