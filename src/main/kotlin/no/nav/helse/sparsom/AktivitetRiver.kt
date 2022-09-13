@@ -57,16 +57,13 @@ internal class AktivitetRiver(
                     Kontekst(typer.getOrPut(type) { KontekstType(type) }, kontekstverdier)
                 }
 
-                tilNivå(aktivitet.path("alvorlighetsgrad").asText())?.let { nivå ->
-                    val aktivitetKontekster = aktivitet.path("kontekster")
-                        .map { it.intValue() }
-                        .map { kontekster[it] }
+                tilNivå(aktivitet.path("nivå").asText())?.let { nivå ->
                     Aktivitet(
                         id = UUID.fromString(aktivitet.path("id").asText()),
                         nivå = nivå,
                         melding = meldinger.getOrPut(aktivitet.path("melding").asText()) { Melding(aktivitet.path("melding").asText()) },
                         tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText()),
-                        kontekster = aktivitetKontekster
+                        kontekster = kontekster
                     )
                 }
             }
