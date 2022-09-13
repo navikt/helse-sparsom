@@ -70,7 +70,7 @@ internal class AktivitetRiver(
                     )
                 }
             }
-            aktivitetDao.lagre(aktiviteter, meldinger.values, typer.values, navn.values, verdier.values, fødselsnummer, null)
+            aktivitetDao.lagre(aktiviteter, meldinger.values, typer.values, navn.values, verdier.values, fødselsnummer, id)
         }
         logger.info("lagrer aktiviteter fra hendelse {}. Tid brukt: ${tidBrukt}ms", keyValue("meldingsreferanseId", hendelseId))
     }
