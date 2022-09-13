@@ -20,7 +20,7 @@ internal class ImporterAktivitetslogg(private val dispatcher: Dispatcher) {
         try {
             utførMigrering(AktivitetDao({ connection }, false), connection)
         } catch (e: Exception) {
-            if (connection.autoCommit) connection.rollback()
+            if (!connection.autoCommit) connection.rollback()
             throw e
         }
     }
