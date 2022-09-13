@@ -77,109 +77,140 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
         assertAntallRader(1, 2, 2)
     }
 
-    /*
+
     @Test
     fun `ulike hendelser med samme kontekst`() {
         val fødselsnummer = "12345678910"
         val hendelseId1 = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
         val hendelseId2 = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
-        aktivitetDao.lagre(
-            listOf(
-                Aktivitet(UUID.randomUUID(), INFO, "en melding", LocalDateTime.now(), listOf(
-                    Kontekst("Person", mapOf(
-                        KontekstNavn("fødselsnummer") to KontekstVerdi(fødselsnummer)
-                    ))
-                ))
-            ),
-            emptyList(),
-            emptyList(),
-            emptyList(),
-            fødselsnummer,
-            hendelseId1
+
+        val melding = Melding("en melding")
+        val person = KontekstType("Person")
+        val fnr = KontekstNavn("fødselsnummer")
+        val fnrverdi = KontekstVerdi(fødselsnummer)
+        val aktivitetKontekst1 = Kontekst(person, mapOf(fnr to fnrverdi))
+        val aktivitet1 = Aktivitet(
+            UUID.randomUUID(), INFO, melding, LocalDateTime.now(), listOf(aktivitetKontekst1)
+        )
+
+        val melding2 = Melding("en melding")
+        val person2 = KontekstType("Person")
+        val fnr2 = KontekstNavn("fødselsnummer")
+        val fnrverdi2 = KontekstVerdi(fødselsnummer)
+        val aktivitetKontekst2 = Kontekst(person2, mapOf(fnr2 to fnrverdi2))
+        val aktivitetKontekst3 = Kontekst(person2, mapOf(fnr2 to fnrverdi2))
+        val aktivitet2 = Aktivitet(
+            UUID.randomUUID(), INFO, melding2, LocalDateTime.now(), listOf(aktivitetKontekst2, aktivitetKontekst3)
         )
         aktivitetDao.lagre(
-            listOf(Aktivitet(UUID.randomUUID(), INFO, "en annen melding", LocalDateTime.now(), listOf(
-                Kontekst("Person", mapOf(
-                    KontekstNavn("fødselsnummer") to KontekstVerdi(fødselsnummer)
-                )),
-                Kontekst("Person", mapOf(
-                    KontekstNavn("fødselsnummer") to KontekstVerdi(fødselsnummer)
-                ))
-            ))),
-            emptyList(),
-            emptyList(),
-            emptyList(),
-            fødselsnummer,
-            hendelseId2
+            aktiviteter = listOf(aktivitet1),
+            meldinger = listOf(melding),
+            konteksttyper = listOf(person),
+            kontekstNavn = listOf(fnr),
+            kontekstVerdi = listOf(fnrverdi),
+            personident = fødselsnummer,
+            hendelseId = hendelseId1
+        )
+        aktivitetDao.lagre(
+            aktiviteter = listOf(aktivitet2),
+            meldinger = listOf(melding2),
+            konteksttyper = listOf(person2),
+            kontekstNavn = listOf(fnr2),
+            kontekstVerdi = listOf(fnrverdi2),
+            personident = fødselsnummer,
+            hendelseId = hendelseId2
         )
         assertAntallRader(2, 1, 2)
     }
+
 
     @Test
     fun `varsel finnes fra før av`() {
         val fødselsnummer = "12345678910"
         val hendelseId1 = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
         val hendelseId2 = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
-        val tidsstempel = LocalDateTime.now()
-        val id = UUID.randomUUID()
-        val aktivitet1 = Aktivitet(id, INFO, "melding", tidsstempel, listOf(Kontekst("Person", mapOf(KontekstNavn("fødselsnummer") to KontekstVerdi(fødselsnummer)))))
-        val aktivitet1Kopi = Aktivitet(id, INFO, "melding", tidsstempel, listOf(Kontekst("Person", mapOf(KontekstNavn("fødselsnummer") to KontekstVerdi(fødselsnummer)))))
-        aktivitetDao.lagre(
-            listOf(aktivitet1),
-            emptyList(),
-            emptyList(),
-            emptyList(),
-            fødselsnummer,
-            hendelseId1
+
+        val melding = Melding("en melding")
+        val person = KontekstType("Person")
+        val fnr = KontekstNavn("fødselsnummer")
+        val fnrverdi = KontekstVerdi(fødselsnummer)
+        val aktivitetKontekst1 = Kontekst(person, mapOf(fnr to fnrverdi))
+        val aktivitet1 = Aktivitet(
+            UUID.randomUUID(), INFO, melding, LocalDateTime.now(), listOf(aktivitetKontekst1)
+        )
+
+        val melding2 = Melding("en melding")
+        val person2 = KontekstType("Person")
+        val fnr2 = KontekstNavn("fødselsnummer")
+        val fnrverdi2 = KontekstVerdi("annet fnr")
+        val aktivitetKontekst2 = Kontekst(person2, mapOf(fnr2 to fnrverdi2))
+        val aktivitet2 = Aktivitet(
+            UUID.randomUUID(), INFO, melding2, LocalDateTime.now(), listOf(aktivitetKontekst2)
         )
         aktivitetDao.lagre(
-            listOf(
-                aktivitet1Kopi,
-                Aktivitet(UUID.randomUUID(), INFO, "annen melding", LocalDateTime.now(), listOf(
-                    Kontekst("Person", mapOf(
-                        KontekstNavn("fødselsnummer") to KontekstVerdi("01987654321")
-                    )
-                ))),
-            ),
-            emptyList(),
-            emptyList(),
-            emptyList(),
-            fødselsnummer,
-            hendelseId2
+            aktiviteter = listOf(aktivitet1),
+            meldinger = listOf(melding),
+            konteksttyper = listOf(person),
+            kontekstNavn = listOf(fnr),
+            kontekstVerdi = listOf(fnrverdi),
+            personident = fødselsnummer,
+            hendelseId = hendelseId1
+        )
+        aktivitetDao.lagre(
+            aktiviteter = listOf(aktivitet2),
+            meldinger = listOf(melding2),
+            konteksttyper = listOf(person2),
+            kontekstNavn = listOf(fnr2),
+            kontekstVerdi = listOf(fnrverdi2),
+            personident = fødselsnummer,
+            hendelseId = hendelseId2
         )
         assertAntallRader(2, 2, 2)
     }
+
 
     @Test
     fun duplikathåndtering() {
         val fødselsnummer = "12345678910"
         val hendelseId1 = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
         val hendelseId2 = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
-        val tidsstempel = LocalDateTime.now()
+
         val id = UUID.randomUUID()
-        aktivitetDao.lagre(
-            listOf(Aktivitet(id, INFO, "melding", tidsstempel, listOf(
-                Kontekst("Person", mapOf(
-                    KontekstNavn("fødselsnummer") to KontekstVerdi(fødselsnummer)
-                ))
-            ))),
-            emptyList(),
-            emptyList(),
-            emptyList(),
-            fødselsnummer,
-            hendelseId1
+
+        val melding = Melding("en melding")
+        val person = KontekstType("Person")
+        val fnr = KontekstNavn("fødselsnummer")
+        val fnrverdi = KontekstVerdi(fødselsnummer)
+        val aktivitetKontekst1 = Kontekst(person, mapOf(fnr to fnrverdi))
+        val aktivitet1 = Aktivitet(
+            id, INFO, melding, LocalDateTime.now(), listOf(aktivitetKontekst1)
+        )
+
+        val melding2 = Melding("en melding")
+        val person2 = KontekstType("Person")
+        val fnr2 = KontekstNavn("fødselsnummer")
+        val fnrverdi2 = KontekstVerdi(fødselsnummer)
+        val aktivitetKontekst2 = Kontekst(person2, mapOf(fnr2 to fnrverdi2))
+        val aktivitet2 = Aktivitet(
+            id, INFO, melding2, LocalDateTime.now(), listOf(aktivitetKontekst2)
         )
         aktivitetDao.lagre(
-            listOf(Aktivitet(id, INFO, "melding", tidsstempel, listOf(
-                Kontekst("Person", mapOf(
-                    KontekstNavn("fødselsnummer") to KontekstVerdi(fødselsnummer)
-                ))
-            ))),
-            emptyList(),
-            emptyList(),
-            emptyList(),
-            fødselsnummer,
-            hendelseId2
+            aktiviteter = listOf(aktivitet1),
+            meldinger = listOf(melding),
+            konteksttyper = listOf(person),
+            kontekstNavn = listOf(fnr),
+            kontekstVerdi = listOf(fnrverdi),
+            personident = fødselsnummer,
+            hendelseId = hendelseId1
+        )
+        aktivitetDao.lagre(
+            aktiviteter = listOf(aktivitet2),
+            meldinger = listOf(melding2),
+            konteksttyper = listOf(person2),
+            kontekstNavn = listOf(fnr2),
+            kontekstVerdi = listOf(fnrverdi2),
+            personident = fødselsnummer,
+            hendelseId = hendelseId2
         )
         assertAntallRader(1, 1, 1)
     }
@@ -187,40 +218,45 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
     @Test
     fun `duplikathåndtering med flere kontekster`() {
         val fødselsnummer = "12345678910"
-        val hendelseId = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
+        val hendelseId1 = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
         val hendelseId2 = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
-        val tidsstempel = LocalDateTime.now()
-        val vedtaksperiodeid = UUID.randomUUID()
+
         val id = UUID.randomUUID()
-        aktivitetDao.lagre(
-            listOf(Aktivitet(id, INFO, "en melding", tidsstempel, listOf(
-                Kontekst("Person", mapOf(
-                    KontekstNavn("fødselsnummer") to KontekstVerdi(fødselsnummer)
-                )),
-                Kontekst("Vedtaksperiode", mapOf(
-                    KontekstNavn("vedtaksperiodeId") to KontekstVerdi("$vedtaksperiodeid")
-                ))
-            ))),
-            emptyList(),
-            emptyList(),
-            emptyList(),
-            fødselsnummer,
-            hendelseId
+
+        val melding = Melding("en melding")
+        val person = KontekstType("Person")
+        val fnr = KontekstNavn("fødselsnummer")
+        val fnrverdi = KontekstVerdi(fødselsnummer)
+        val aktivitetKontekst1 = Kontekst(person, mapOf(fnr to fnrverdi))
+        val aktivitet1 = Aktivitet(
+            id, INFO, melding, LocalDateTime.now(), listOf(aktivitetKontekst1)
+        )
+
+        val melding2 = Melding("en melding")
+        val person2 = KontekstType("Person")
+        val fnr2 = KontekstNavn("fødselsnummer")
+        val fnrverdi2 = KontekstVerdi("annet fnr")
+        val aktivitetKontekst2 = Kontekst(person2, mapOf(fnr2 to fnrverdi2))
+        val aktivitet2 = Aktivitet(
+            id, INFO, melding2, LocalDateTime.now(), listOf(aktivitetKontekst2)
         )
         aktivitetDao.lagre(
-            listOf(Aktivitet(id, INFO, "en melding", tidsstempel, listOf(
-                Kontekst("Person", mapOf(
-                    KontekstNavn("fødselsnummer") to KontekstVerdi(fødselsnummer)
-                )),
-                Kontekst("Vedtaksperiode", mapOf(
-                    KontekstNavn("vedtaksperiodeId") to KontekstVerdi("$vedtaksperiodeid")
-                ))
-            ))),
-            emptyList(),
-            emptyList(),
-            emptyList(),
-            fødselsnummer,
-            hendelseId2
+            aktiviteter = listOf(aktivitet1),
+            meldinger = listOf(melding),
+            konteksttyper = listOf(person),
+            kontekstNavn = listOf(fnr),
+            kontekstVerdi = listOf(fnrverdi),
+            personident = fødselsnummer,
+            hendelseId = hendelseId1
+        )
+        aktivitetDao.lagre(
+            aktiviteter = listOf(aktivitet2),
+            meldinger = listOf(melding2),
+            konteksttyper = listOf(person2),
+            kontekstNavn = listOf(fnr2),
+            kontekstVerdi = listOf(fnrverdi2),
+            personident = fødselsnummer,
+            hendelseId = hendelseId2
         )
         assertAntallRader(
             forventetAntallAktiviteter = 1,
@@ -228,7 +264,6 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
             forventetAntallKoblinger = 2
         )
     }
-*/
 
     private fun assertAntallRader(forventetAntallAktiviteter: Int, forventetAntallKontekster: Int, forventetAntallKoblinger: Int) {
         val faktiskAntallAktiviteter = antallAktiviteter()
