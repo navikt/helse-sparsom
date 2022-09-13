@@ -100,6 +100,7 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                     }
                 }
             }
+            connection.commit()
             connection.prepareStatement(KONTEKST_TYPE_INSERT, RETURN_GENERATED_KEYS).use { statement ->
                 aktiviteter.forEach { it.lagreKontekstType(statement) }
                 statement.executeLargeBatch()
@@ -136,6 +137,7 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                     }
                 }
             }
+            connection.commit()
             connection.prepareStatement(AKTIVITET_INSERT, RETURN_GENERATED_KEYS).use { statement ->
                 aktiviteter.forEach { it.lagreAktivitet(statement, personidentId, hendelseId) }
                 statement.executeLargeBatch().onEachIndexed { index, affectedRows ->
@@ -154,6 +156,7 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                     }
                 }
             }
+            connection.commit()
             connection.prepareStatement(AKTIVITET_KONTEKST_INSERT).use { statement ->
                 aktiviteter.forEach { it.kobleAktivitetOgKontekst(statement) }
                 statement.executeLargeBatch()
