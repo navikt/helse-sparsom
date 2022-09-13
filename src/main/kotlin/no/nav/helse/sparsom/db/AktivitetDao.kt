@@ -24,49 +24,97 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
         @Language("PostgreSQL")
         private val PERSON_INSERT = """
-            INSERT INTO personident(ident) VALUES(?) 
-            ON CONFLICT(ident) 
-            DO UPDATE SET ident=EXCLUDED.ident 
-            RETURNING id;
+            with verdier as (
+                select ident from (values %s) v(ident)
+            ), ins as (
+                insert into personident(ident)
+                select ident from verdier
+                on conflict do nothing
+                returning id,ident
+            )
+            select id,ident from ins
+            union all
+            select p.id,v.ident from verdier v
+            join personident p on p.ident = v.ident
+            
         """
 
         @Language("PostgreSQL")
         private val MELDING_INSERT = """
-            INSERT INTO melding(tekst) VALUES %s 
-            ON CONFLICT(tekst)
-            DO UPDATE SET tekst=EXCLUDED.tekst 
-            RETURNING id;
+            with verdier as (
+                select tekst from (values %s) v(tekst)
+            ), ins as (
+                insert into melding(tekst)
+                select tekst from verdier
+                on conflict do nothing
+                returning id,tekst
+            )
+            select id,tekst from ins
+            union all
+            select m.id,v.tekst from verdier v
+            join melding m on m.tekst = v.tekst
         """
 
         @Language("PostgreSQL")
         private val KONTEKST_TYPE_INSERT = """
-            INSERT INTO kontekst_type(type) VALUES %s
-            ON CONFLICT (type) 
-            DO UPDATE SET type=EXCLUDED.type
-            RETURNING id;
+            with verdier as (
+                select type from (values %s) v(type)
+            ), ins as (
+                insert into kontekst_type(type)
+                select type from verdier
+                on conflict do nothing
+                returning id,type
+            )
+            select id,type from ins
+            union all
+            select kt.id,v.type from verdier v
+            join kontekst_type kt on kt.type = v.type
         """
 
         @Language("PostgreSQL")
         private val KONTEKST_NAVN_INSERT = """
-            INSERT INTO kontekst_navn(navn) VALUES %s
-            ON CONFLICT (navn) 
-            DO UPDATE SET navn=EXCLUDED.navn
-            RETURNING id;
+            with verdier as (
+                select navn from (values %s) v(navn)
+            ), ins as (
+                insert into kontekst_navn(navn)
+                select navn from verdier
+                on conflict do nothing
+                returning id,navn
+            )
+            select id,navn from ins
+            union all
+            select kn.id,v.navn from verdier v
+            join kontekst_navn kn on kn.navn = v.navn
         """
         @Language("PostgreSQL")
         private val KONTEKST_VERDI_INSERT = """
-            INSERT INTO kontekst_verdi(verdi) VALUES %s
-            ON CONFLICT (verdi) 
-            DO UPDATE SET verdi=EXCLUDED.verdi
-            RETURNING id;
+            with verdier as (
+                select verdi from (values %s) v(verdi)
+            ), ins as (
+                insert into kontekst_verdi(verdi) 
+                select verdi from verdier
+                on conflict do nothing
+                returning id,verdi
+            )
+            select id,verdi from ins
+            union all
+            select kv.id,v.verdi from verdier v
+            join kontekst_verdi kv on kv.verdi = v.verdi
         """
         @Language("PostgreSQL")
         private val AKTIVITET_INSERT = """
-            INSERT INTO aktivitet(melding_id, personident_id, hendelse_id, level, tidsstempel, aktivitet_uuid) 
-            VALUES %s
-            ON CONFLICT (aktivitet_uuid) 
-            DO UPDATE SET level=EXCLUDED.level
-            RETURNING id;
+            with verdier as (
+                select melding_id, personident_id, hendelse_id, level, tidsstempel, aktivitet_uuid from (values %s) v(melding_id, personident_id, hendelse_id, level, tidsstempel, aktivitet_uuid)
+            ), ins as (
+                insert into aktivitet(melding_id, personident_id, hendelse_id, level, tidsstempel, aktivitet_uuid)
+                select melding_id, personident_id, hendelse_id, level, tidsstempel, aktivitet_uuid from verdier
+                on conflict do nothing
+                returning id,aktivitet_uuid
+            )
+            select id,aktivitet_uuid from ins
+            union all
+            select a.id,v.aktivitet_uuid from verdier v
+            join aktivitet a on a.aktivitet_uuid = v.aktivitet_uuid
         """
         @Language("PostgreSQL")
         private val AKTIVITET_KONTEKST_INSERT = """
@@ -86,18 +134,19 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
         makeConnection { connection ->
             konteksttyper.chunked(ROWS_PER_INSERT_STATEMENT).forEach { chunk ->
                 val sql = String.format(KONTEKST_TYPE_INSERT, chunk.indices.joinToString { "(?)" })
-                connection.prepareStatement(sql, RETURN_GENERATED_KEYS).use { statement ->
+                connection.prepareStatement(sql).use { statement ->
                     var index = 1
                     chunk.forEach {
                         it.lagreKontekstType(statement, index)
                         index += 1
                     }
                     retryDeadlock(statement)
-                    statement.generatedKeys.use { rs ->
+                    statement.resultSet.use { rs ->
                         index = 0
                         while (rs.next()) {
                             val id = rs.getLong(1)
-                            chunk[index].typeId(id)
+                            val type = rs.getString(2)
+                            chunk.single { it.typeId(type, id) }
                             index += 1
                         }
                         check(index == chunk.size) { "lagret ulikt antall" }
@@ -107,18 +156,19 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
 
             kontekstNavn.chunked(ROWS_PER_INSERT_STATEMENT).forEach { chunk ->
                 val sql = String.format(KONTEKST_NAVN_INSERT, chunk.indices.joinToString { "(?)" })
-                connection.prepareStatement(sql, RETURN_GENERATED_KEYS).use { statement ->
+                connection.prepareStatement(sql).use { statement ->
                     var index = 1
                     chunk.forEach {
                         it.lagreKontekstNavn(statement, index)
                         index += 1
                     }
                     retryDeadlock(statement)
-                    statement.generatedKeys.use { rs ->
+                    statement.resultSet.use { rs ->
                         index = 0
                         while (rs.next()) {
                             val id = rs.getLong(1)
-                            chunk[index].navnId(id)
+                            val navn = rs.getString(2)
+                            chunk.single { it.navnId(navn, id) }
                             index += 1
                         }
                         check(index == chunk.size) {
@@ -130,18 +180,19 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
 
             kontekstVerdi.chunked(ROWS_PER_INSERT_STATEMENT).forEach { chunk ->
                 val sql = String.format(KONTEKST_VERDI_INSERT, chunk.indices.joinToString { "(?)" })
-                connection.prepareStatement(sql, RETURN_GENERATED_KEYS).use { statement ->
+                connection.prepareStatement(sql).use { statement ->
                     var index = 1
                     chunk.forEach {
                         it.lagreKontekstVerdi(statement, index)
                         index += 1
                     }
                     retryDeadlock(statement)
-                    statement.generatedKeys.use { rs ->
+                    statement.resultSet.use { rs ->
                         index = 0
                         while (rs.next()) {
                             val id = rs.getLong(1)
-                            chunk[index].verdiId(id)
+                            val verdi = rs.getString(2)
+                            chunk.single { it.verdiId(verdi, id) }
                             index += 1
                         }
                         check(index == chunk.size) {
@@ -152,11 +203,12 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
             }
 
             var personidentId: Long = 0L
-            connection.prepareStatement(PERSON_INSERT, RETURN_GENERATED_KEYS).use { statement ->
+            connection.prepareStatement(String.format(PERSON_INSERT, "(?)")).use { statement ->
                 statement.setString(1, personident)
                 retryDeadlock(statement)
-                statement.generatedKeys.use { rs ->
+                statement.resultSet.use { rs ->
                     rs.next()
+                    check(personident == rs.getString(2)) { "en annen person" }
                     personidentId = rs.getLong(1)
                 }
                 check(personidentId != 0L) { "har ikke personidentId" }
@@ -164,18 +216,19 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
 
             meldinger.chunked(ROWS_PER_INSERT_STATEMENT).forEach { chunk ->
                 val sql = String.format(MELDING_INSERT, chunk.indices.joinToString { "(?)" })
-                connection.prepareStatement(sql, RETURN_GENERATED_KEYS).use { statement ->
+                connection.prepareStatement(sql).use { statement ->
                     var index = 1
                     chunk.forEach {
                         it.lagreMelding(statement, index)
                         index += 1
                     }
                     retryDeadlock(statement)
-                    statement.generatedKeys.use { rs ->
+                    statement.resultSet.use { rs ->
                         index = 0
                         while (rs.next()) {
                             val id = rs.getLong(1)
-                            chunk[index].meldingId(id)
+                            val tekst = rs.getString(2)
+                            chunk.single { it.meldingId(tekst, id) }
                             index += 1
                         }
                         check(index == chunk.size) {
@@ -186,7 +239,7 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
             }
             aktiviteter.chunked(ROWS_PER_INSERT_STATEMENT).forEach { chunk ->
                 val sql = String.format(AKTIVITET_INSERT, chunk.indices.joinToString { "(?, ?, ?, CAST(? AS LEVEL), CAST(? AS timestamptz), CAST(? AS uuid))" })
-                connection.prepareStatement(sql, RETURN_GENERATED_KEYS).use { statement ->
+                connection.prepareStatement(sql).use { statement ->
                     var index = 1
                     chunk.forEach {
                         it.lagreAktivitet(statement, index, personidentId, hendelseId)
@@ -194,10 +247,10 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                     }
                     retryDeadlock(statement)
                     logg.info("${chunk.size} aktiviteter ble lagret")
-                    statement.generatedKeys.use { rs ->
+                    statement.resultSet.use { rs ->
                         index = 0
                         while (rs.next()) {
-                            chunk[index].aktivitetId(rs.getLong(1))
+                            chunk.single { it.aktivitetId(rs.getString(2), rs.getLong(1)) }
                             index += 1
                         }
                         check(index == chunk.size) {

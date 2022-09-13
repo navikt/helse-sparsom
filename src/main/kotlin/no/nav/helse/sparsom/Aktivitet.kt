@@ -36,8 +36,11 @@ internal class Aktivitet(
         it.kobleAktivitetOgKontekst(aktivitetId)
     }
 
-    fun aktivitetId(id: Long) {
+    fun aktivitetId(uuid: String, id: Long): Boolean {
+        if (this.id.toString() != uuid) return false
+        if (this.aktivitetId != -1L) return false
         aktivitetId = id
+        return true
     }
 
     internal companion object {
@@ -71,8 +74,11 @@ internal class Melding(private val melding: String) {
         statement.setString(index, melding)
     }
 
-    fun meldingId(id: Long) {
+    fun meldingId(tekst: String, id: Long): Boolean {
+        if (this.melding != tekst) return false
+        if (this.id != null) return false
         this.id = id
+        return true
     }
 
     override fun equals(other: Any?) = other is Melding && other.melding == this.melding
@@ -87,8 +93,11 @@ internal class KontekstType(private val type: String) {
         statement.setString(index, type)
     }
 
-    fun typeId(id: Long) {
+    fun typeId(type: String, id: Long): Boolean {
+        if (type != this.type) return false
+        if (this.id != null) return false
         this.id = id
+        return true
     }
 
     override fun equals(other: Any?) = other is KontekstType && other.type == this.type
@@ -102,8 +111,11 @@ internal class KontekstNavn(private val navn: String) {
         statement.setString(index, navn)
     }
 
-    fun navnId(id: Long) {
+    fun navnId(navn: String, id: Long): Boolean {
+        if (navn != this.navn) return false
+        if (this.id != null) return false
         this.id = id
+        return true
     }
 
     override fun equals(other: Any?) = other is KontekstNavn && other.navn == this.navn
@@ -118,8 +130,11 @@ internal class KontekstVerdi(private val verdi: String) {
         statement.setString(index, verdi)
     }
 
-    fun verdiId(id: Long) {
+    fun verdiId(verdi: String, id: Long): Boolean {
+        if (verdi != this.verdi) return false
+        if (this.id != null) return false
         this.id = id
+        return true
     }
 
     override fun equals(other: Any?) = other is KontekstVerdi && other.verdi == this.verdi
