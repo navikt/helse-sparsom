@@ -19,8 +19,7 @@ private fun createApp(env: Map<String, String>): RapidsConnection {
     val dataSourceBuilder = DataSourceBuilder(env)
     val dataSource by lazy { dataSourceBuilder.getDataSource() }
     return RapidApplication.create(env).apply {
-        val aktivitetFactory = AktivitetFactory(AktivitetDao(dataSource))
-        AktivitetRiver(this, HendelseDao { dataSource }, aktivitetFactory)
+        AktivitetRiver(this, HendelseDao { dataSource }, AktivitetDao(dataSource))
         register(object : RapidsConnection.StatusListener {
             override fun onStartup(rapidsConnection: RapidsConnection) {
                 dataSourceBuilder.migrate()
@@ -46,7 +45,6 @@ private fun createApp(env: Map<String, String>): RapidsConnection {
 
                 ImporterAktivitetslogg(Dispatcher("arbeidstabell_step2", connection))
                     .migrate(connection)
-                exitProcess(0)
             }
 
             override fun onShutdown(rapidsConnection: RapidsConnection) {

@@ -2,10 +2,7 @@ package no.nav.helse.sparsom.db
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.sparsom.Aktivitet
-import no.nav.helse.sparsom.Kontekst
-import no.nav.helse.sparsom.KontekstNavn
-import no.nav.helse.sparsom.KontekstVerdi
+import no.nav.helse.sparsom.*
 import no.nav.helse.sparsom.Nivå.INFO
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
@@ -26,50 +23,61 @@ internal class AktivitetDaoTest: AbstractDatabaseTest() {
         aktivitetDao = AktivitetDao(dataSource)
         hendelseDao = HendelseDao { dataSource }
     }
-/*
+
     @Test
     fun lagre() {
         val fødselsnummer = "12345678910"
         val hendelseId = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
+        val melding = Melding("en melding")
+        val kontekstType = KontekstType("Person")
+        val kontekstNavn = KontekstNavn("fødselsnummer")
+        val kontekstVerdi = KontekstVerdi(fødselsnummer)
+        val aktivitetKontekst = Kontekst(kontekstType, mapOf(kontekstNavn to kontekstVerdi))
+        val aktivitet = Aktivitet(
+            UUID.randomUUID(), INFO, melding, LocalDateTime.now(), listOf(aktivitetKontekst)
+        )
         aktivitetDao.lagre(
-            aktiviteter = listOf(
-                Aktivitet(UUID.randomUUID(), INFO, "en melding", LocalDateTime.now(), listOf(Kontekst("Person", mapOf(
-                    KontekstNavn("fødselsnummer") to KontekstVerdi(fødselsnummer)
-                ))))
-            ),
-            emptyList(),
-            emptyList(),
-            emptyList(),
+            aktiviteter = listOf(aktivitet),
+            meldinger = listOf(melding),
+            konteksttyper = listOf(kontekstType),
+            kontekstNavn = listOf(kontekstNavn),
+            kontekstVerdi = listOf(kontekstVerdi),
             personident = fødselsnummer,
             hendelseId = hendelseId
         )
         assertAntallRader(1, 1, 1)
     }
 
+
     @Test
     fun `lagre med flere kontekster`() {
         val fødselsnummer = "12345678910"
         val hendelseId = hendelseDao.lagre(fødselsnummer, UUID.randomUUID(), "{}", LocalDateTime.now())
+        val melding = Melding("en melding")
+        val person = KontekstType("Person")
+        val arbeidsgiver = KontekstType("Arbeidsgiver")
+        val fnr = KontekstNavn("fødselsnummer")
+        val orgnr = KontekstNavn("organisasjonsnummer")
+        val fnrverdi = KontekstVerdi(fødselsnummer)
+        val orgnrverdi = KontekstVerdi("987654321")
+        val aktivitetKontekst1 = Kontekst(person, mapOf(fnr to fnrverdi))
+        val aktivitetKontekst2 = Kontekst(arbeidsgiver, mapOf(orgnr to orgnrverdi))
+        val aktivitet = Aktivitet(
+            UUID.randomUUID(), INFO, melding, LocalDateTime.now(), listOf(aktivitetKontekst1, aktivitetKontekst2)
+        )
         aktivitetDao.lagre(
-            listOf(
-                Aktivitet(UUID.randomUUID(), INFO, "en melding", LocalDateTime.now(), listOf(
-                    Kontekst("Person", mapOf(
-                        KontekstNavn("fødselsnummer") to KontekstVerdi(fødselsnummer)
-                    )),
-                    Kontekst("Arbeidsgiver", mapOf(
-                        KontekstNavn("organisasjonsnummer") to KontekstVerdi("987654321")
-                    ))
-                ))
-            ),
-            emptyList(),
-            emptyList(),
-            emptyList(),
-            fødselsnummer,
-            hendelseId
+            aktiviteter = listOf(aktivitet),
+            meldinger = listOf(melding),
+            konteksttyper = listOf(person, arbeidsgiver),
+            kontekstNavn = listOf(fnr, orgnr),
+            kontekstVerdi = listOf(fnrverdi, orgnrverdi),
+            personident = fødselsnummer,
+            hendelseId = hendelseId
         )
         assertAntallRader(1, 2, 2)
     }
 
+    /*
     @Test
     fun `ulike hendelser med samme kontekst`() {
         val fødselsnummer = "12345678910"

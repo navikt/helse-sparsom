@@ -3,6 +3,7 @@ package no.nav.helse.sparsom
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
+import no.nav.helse.sparsom.db.AktivitetDao
 import no.nav.helse.sparsom.db.HendelseRepository
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
@@ -10,40 +11,40 @@ import org.junit.jupiter.api.Test
 
 internal class AktivitetRiverTest {
     private val testRapid = TestRapid()
-    private lateinit var aktivitetFactory: AktivitetFactory
+    private lateinit var dao: AktivitetDao
     private lateinit var hendelseRepository: HendelseRepository
 
     @BeforeEach
     fun beforeEach() {
         testRapid.reset()
-        aktivitetFactory = mockk(relaxed = true)
+        dao = mockk(relaxed = true)
         hendelseRepository = mockk(relaxed = true)
-        AktivitetRiver(testRapid, hendelseRepository, aktivitetFactory)
+        AktivitetRiver(testRapid, hendelseRepository, dao)
     }
 
     @Test
     fun river() {
         val melding = AktivitetRiverTest::class.java.classLoader.getResource("testmelding.json")!!.readText()
         testRapid.sendTestMessage(melding)
-        verify(exactly = 1) { aktivitetFactory.aktiviteter(any(), "12345678910", any()) }
+        verify(exactly = 1) { dao.lagre(any(), any(), any(), any(), any(), "12345678910", any()) }
     }
 
     @Test
     fun `mangler fødselsnummer`() {
         testRapid.sendTestMessage(meldingUtenFnr())
-        verify(exactly = 0) { aktivitetFactory.aktiviteter(any(), any(), any()) }
+        verify(exactly = 0) { dao.lagre(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     @Test
     fun `mangler aktiviteter`() {
         testRapid.sendTestMessage(meldingUtenAktiviteter())
-        verify(exactly = 0) { aktivitetFactory.aktiviteter(any(), any(), any()) }
+        verify(exactly = 0) { dao.lagre(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     @Test
     fun `aktivitet har dårlig timestamp`() {
         testRapid.sendTestMessage(meldingMedDårligTimestamp())
-        verify(exactly = 0) { aktivitetFactory.aktiviteter(any(), any(), any()) }
+        verify(exactly = 0) { dao.lagre(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     @Language("JSON")

@@ -3,6 +3,7 @@ package no.nav.helse.sparsom
 import com.fasterxml.jackson.databind.JsonNode
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.*
+import no.nav.helse.sparsom.db.AktivitetDao
 import no.nav.helse.sparsom.db.HendelseRepository
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -12,11 +13,8 @@ import kotlin.system.measureTimeMillis
 internal class AktivitetRiver(
     rapidsConnection: RapidsConnection,
     private val hendelseRepository: HendelseRepository,
-    private val aktivitetFactory: AktivitetFactory
+    private val aktivitetDao: AktivitetDao
 ): River.PacketListener {
-    private companion object {
-        private val logger = LoggerFactory.getLogger(AktivitetRiver::class.java)
-    }
     init {
         River(rapidsConnection).apply {
             validate {
@@ -40,9 +38,51 @@ internal class AktivitetRiver(
         val tidsstempel = LocalDateTime.parse(packet["@opprettet"].asText())
         val tidBrukt = measureTimeMillis {
             val id = hendelseRepository.lagre(fødselsnummer, hendelseId, packet.toJson(), tidsstempel)
-            val aktiviteter = packet["aktiviteter"].takeUnless(JsonNode::isMissingOrNull) ?: emptyList()
-            aktivitetFactory.aktiviteter(aktiviteter, fødselsnummer, id)
+
+            val typer = mutableMapOf<String, KontekstType>()
+            val navn = mutableMapOf<String, KontekstNavn>()
+            val verdier = mutableMapOf<String, KontekstVerdi>()
+            val meldinger = mutableMapOf<String, Melding>()
+
+            val aktiviteter = packet["aktiviteter"].mapNotNull { aktivitet ->
+                val kontekster = aktivitet.path("kontekster").map {
+                    val kontekstverdier = mutableMapOf<KontekstNavn, KontekstVerdi>()
+
+                    it.path("kontekstmap").fields().forEach { (kontekstNavn, kontekstVerdi) ->
+                        val kn = navn.getOrPut(kontekstNavn) { KontekstNavn(kontekstNavn) }
+                        val kv = verdier.getOrPut(kontekstVerdi.asText()) { KontekstVerdi(kontekstVerdi.asText()) }
+                        kontekstverdier[kn] = kv
+                    }
+                    val type = it.path("konteksttype").asText()
+                    Kontekst(typer.getOrPut(type) { KontekstType(type) }, kontekstverdier)
+                }
+
+                tilNivå(aktivitet.path("alvorlighetsgrad").asText())?.let { nivå ->
+                    val aktivitetKontekster = aktivitet.path("kontekster")
+                        .map { it.intValue() }
+                        .map { kontekster[it] }
+                    Aktivitet(
+                        id = UUID.fromString(aktivitet.path("id").asText()),
+                        nivå = nivå,
+                        melding = meldinger.getOrPut(aktivitet.path("melding").asText()) { Melding(aktivitet.path("melding").asText()) },
+                        tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText()),
+                        kontekster = aktivitetKontekster
+                    )
+                }
+            }
+            aktivitetDao.lagre(aktiviteter, meldinger.values, typer.values, navn.values, verdier.values, fødselsnummer, null)
         }
         logger.info("lagrer aktiviteter fra hendelse {}. Tid brukt: ${tidBrukt}ms", keyValue("meldingsreferanseId", hendelseId))
+    }
+
+    private companion object {
+        private val logger = LoggerFactory.getLogger(AktivitetRiver::class.java)
+        private fun tilNivå(value: String) = when (value) {
+            "INFO" -> Nivå.INFO
+            "WARNING" -> Nivå.VARSEL
+            "ERROR" -> Nivå.FUNKSJONELL_FEIL
+            "SEVERE" -> Nivå.LOGISK_FEIL
+            else -> null
+        }
     }
 }
