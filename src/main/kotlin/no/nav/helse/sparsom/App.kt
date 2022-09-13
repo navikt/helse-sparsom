@@ -46,6 +46,7 @@ private fun createApp(env: Map<String, String>): RapidsConnection {
 
                 ImporterAktivitetslogg(Dispatcher("arbeidstabell_step2", connection))
                     .migrate(connection)
+                exitProcess(0)
             }
 
             override fun onShutdown(rapidsConnection: RapidsConnection) {

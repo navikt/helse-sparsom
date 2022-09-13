@@ -14,63 +14,27 @@ import kotlin.system.measureTimeMillis
 internal class Aktivitet(
     private val id: UUID,
     private val nivå: Nivå,
-    private val melding: String,
+    private val melding: Melding,
     private val tidsstempel: LocalDateTime,
     private val kontekster: List<Kontekst>
 ) {
-    private var bleLagret: Boolean = false
-    private var meldingId: Long = -1
     private var aktivitetId: Long = -1
 
-    fun lagreMelding(statement: PreparedStatement) {
-        statement.setString(1, melding)
-        statement.addBatch()
+
+    fun lagreAktivitet(statement: PreparedStatement, index: Int, personidentId: Long, hendelseId: Long?) {
+        statement.setLong(index + 0, requireNotNull(melding.id) { "har ikke meldingId" })
+        statement.setLong(index + 1, personidentId)
+        if (hendelseId != null) statement.setLong(index + 2, hendelseId)
+        else statement.setNull(index + 2, Types.BIGINT)
+        statement.setString(index + 3, nivå.toString())
+        statement.setString(index + 4, tidsstempel.toString())
+        statement.setString(index + 5, id.toString())
     }
 
-    fun lagreKontekstType(statement: PreparedStatement) {
-        kontekster.forEach { it.lagreKontekstType(statement) }
-    }
-    fun lagreKontekstNavn(statement: PreparedStatement) {
-        kontekster.forEach { it.lagreKontekstNavn(statement) }
-    }
-    fun lagreKontekstVerdi(statement: PreparedStatement) {
-        kontekster.forEach { it.lagreKontekstVerdi(statement) }
-    }
 
-    fun lagreAktivitet(statement: PreparedStatement, personidentId: Long, hendelseId: Long?) {
-        check(meldingId != -1L) { "har ikke meldingid satt" }
-        statement.setLong(1, meldingId)
-        statement.setLong(2, personidentId)
-        if (hendelseId != null) statement.setLong(3, hendelseId)
-        else statement.setNull(3, Types.BIGINT)
-        statement.setString(4, nivå.toString())
-        statement.setString(5, tidsstempel.toString())
-        statement.setString(6, id.toString())
-        statement.addBatch()
+    fun kobleAktivitetOgKontekst() = kontekster.flatMap {
+        it.kobleAktivitetOgKontekst(aktivitetId)
     }
-
-    fun bleLagret(verdi: Boolean) {
-        bleLagret = verdi
-    }
-
-    fun meldingId(id: Long) {
-        meldingId = id
-    }
-
-    fun kobleAktivitetOgKontekst(statement: PreparedStatement) {
-        kontekster.forEach {
-            it.kobleAktivitetOgKontekst(statement, aktivitetId)
-        }
-    }
-
-    fun kontekstTypeId(id: Long) =
-        kontekster.any { it.typeId(id) }
-
-    fun kontekstNavnId(id: Long) =
-        kontekster.any { it.navnId(id) }
-
-    fun kontekstVerdiId(id: Long) =
-        kontekster.any { it.verdiId(id) }
 
     fun aktivitetId(id: Long) {
         aktivitetId = id
@@ -79,14 +43,8 @@ internal class Aktivitet(
     internal companion object {
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
         internal fun List<Aktivitet>.lagre(aktivitetRepository: AktivitetRepository, personident: String, hendelseId: Long?) {
-            aktivitetRepository.lagre(this, personident, hendelseId)
+            aktivitetRepository.lagre(this, emptyList(), emptyList(),  emptyList(), emptyList(), personident, hendelseId)
         }
-
-        private fun List<Kontekst>.toDto(hendelseId: Long, hash: String) = flatMap { kontekst ->
-            kontekst.toDto(hendelseId, hash)
-        }
-
-
     }
 
     internal class AktivitetDTO(
@@ -105,93 +63,80 @@ internal class Aktivitet(
     }
 }
 
+internal class Melding(private val melding: String) {
+    internal var id: Long? = null
+        private set
+
+    fun lagreMelding(statement: PreparedStatement, index: Int) {
+        statement.setString(index, melding)
+    }
+
+    fun meldingId(id: Long) {
+        this.id = id
+    }
+
+    override fun equals(other: Any?) = other is Melding && other.melding == this.melding
+    override fun hashCode() = melding.hashCode()
+}
+
+internal class KontekstType(private val type: String) {
+    internal var id: Long? = null
+        private set
+
+    fun lagreKontekstType(statement: PreparedStatement, index: Int) {
+        statement.setString(index, type)
+    }
+
+    fun typeId(id: Long) {
+        this.id = id
+    }
+
+    override fun equals(other: Any?) = other is KontekstType && other.type == this.type
+    override fun hashCode() = type.hashCode()
+}
+internal class KontekstNavn(private val navn: String) {
+    internal var id: Long? = null
+        private set
+
+    fun lagreKontekstNavn(statement: PreparedStatement, index: Int) {
+        statement.setString(index, navn)
+    }
+
+    fun navnId(id: Long) {
+        this.id = id
+    }
+
+    override fun equals(other: Any?) = other is KontekstNavn && other.navn == this.navn
+    override fun hashCode() = navn.hashCode()
+}
+
+internal class KontekstVerdi(private val verdi: String) {
+    internal var id: Long? = null
+        private set
+
+    fun lagreKontekstVerdi(statement: PreparedStatement, index: Int) {
+        statement.setString(index, verdi)
+    }
+
+    fun verdiId(id: Long) {
+        this.id = id
+    }
+
+    override fun equals(other: Any?) = other is KontekstVerdi && other.verdi == this.verdi
+    override fun hashCode() = verdi.hashCode()
+}
+
 internal class Kontekst(
     @JsonAlias("konteksttype")
-    private val type: String,
+    private val type: KontekstType,
     @JsonAlias("kontekstmap")
-    private val detaljer: Map<String, String>,
+    private val detaljer: Map<KontekstNavn, KontekstVerdi>,
 ) {
-    private val detaljerliste = detaljer.toList()
-    private var id: Long? = null
-    private var lagret: Boolean = false
-    private var lagretKontekstNavn: Boolean = false
-    private var lagretKontekstVerdi: Boolean = false
-    private val detaljerId = mutableMapOf<Int, Pair<Long, Long?>>()
 
-    internal fun toDto(hendelseId: Long, hash: String): List<KontekstDTO> {
-        return detaljer.map { KontekstDTO(type, it.key, it.value, hash, hendelseId) }
-    }
-
-    fun lagreKontekstType(typeStatement: PreparedStatement, navnStatement: PreparedStatement, verdiStatement: PreparedStatement) {
-        typeStatement.setString(1, type)
-        typeStatement.addBatch()
-        detaljer.forEach { (navn, verdi) ->
-            navnStatement.setString(1, navn)
-            navnStatement.addBatch()
-            verdiStatement.setString(1, verdi)
-            verdiStatement.addBatch()
+    fun kobleAktivitetOgKontekst(aktivitetId: Long) =
+        detaljer.map { (navn, verdi) ->
+            arrayOf(aktivitetId, requireNotNull(type.id) { "mangler typeId" }, requireNotNull(navn.id) { "har ikke navnId" }, requireNotNull(verdi.id) { "har ikke verdiId" })
         }
-    }
-    fun lagreKontekstType(statement: PreparedStatement) {
-        if (lagret) return
-        lagret = true
-        statement.setString(1, type)
-        statement.addBatch()
-    }
-
-    fun lagreKontekstNavn(statement: PreparedStatement) {
-        if (lagretKontekstNavn) return
-        lagretKontekstNavn = true
-        detaljerliste.forEach { (navn, verdi) ->
-            statement.setString(1, navn)
-            statement.addBatch()
-        }
-    }
-    fun lagreKontekstVerdi(statement: PreparedStatement) {
-        if (lagretKontekstVerdi) return
-        lagretKontekstVerdi = true
-        detaljerliste.forEach { (navn, verdi) ->
-            statement.setString(1, verdi)
-            statement.addBatch()
-        }
-    }
-
-    fun kobleAktivitetOgKontekst(statement: PreparedStatement, aktivitetId: Long) {
-        statement.setLong(1, aktivitetId)
-        statement.setLong(2, requireNotNull(this.id) { "har ikke kontekst id" })
-        detaljerId.values.forEach { (navn, verdi) ->
-            statement.setLong(3, navn)
-            statement.setLong(4, checkNotNull(verdi) { "har ikke id til verdi" })
-            statement.addBatch()
-        }
-    }
-
-    fun typeId(id: Long): Boolean {
-        if (this.id != null) return false
-        this.id = id
-        return true
-    }
-
-    fun navnId(id: Long): Boolean {
-        detaljerliste.forEachIndexed { index, _ ->
-            if (index !in detaljerId) {
-                detaljerId[index] = id to null
-                return true
-            }
-        }
-        return false
-    }
-
-    fun verdiId(id: Long): Boolean {
-        detaljerliste.forEachIndexed { index, _ ->
-            val value = detaljerId.getValue(index)
-            if (value.second == null) {
-                detaljerId.replace(index, value.first to id)
-                return true
-            }
-        }
-        return false
-    }
 
     internal companion object {
         internal fun List<Kontekst>.hash(): String {

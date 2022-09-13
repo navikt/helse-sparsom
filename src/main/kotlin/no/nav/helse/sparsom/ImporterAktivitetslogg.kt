@@ -49,8 +49,25 @@ internal class ImporterAktivitetslogg(private val dispatcher: Dispatcher) {
         fetchStatement.executeQuery().use { rs ->
             fetchStatement.clearParameters()
             while (rs.next()) {
-                val aktiviteter = normalizeJson(objectMapper.readTree(rs.getString("data")))
-                dao.lagre(aktiviteter, ident.toString().padStart(11, '0'), null)
+                val typer = mutableMapOf<String, KontekstType>()
+                val navn = mutableMapOf<String, KontekstNavn>()
+                val verdier = mutableMapOf<String, KontekstVerdi>()
+                val meldinger = mutableMapOf<String, Melding>()
+
+                val original = objectMapper.readTree(rs.getString("data"))
+                val kontekster = original.path("kontekster").map {
+                    val kontekstverdier = mutableMapOf<KontekstNavn, KontekstVerdi>()
+
+                    it.path("kontekstMap").fields().forEach { (kontekstNavn, kontekstVerdi) ->
+                        val kn = navn.getOrPut(kontekstNavn) { KontekstNavn(kontekstNavn) }
+                        val kv = verdier.getOrPut(kontekstVerdi.asText()) { KontekstVerdi(kontekstVerdi.asText()) }
+                        kontekstverdier[kn] = kv
+                    }
+                    val type = it.path("kontekstType").asText()
+                    Kontekst(typer.getOrPut(type) { KontekstType(type) }, kontekstverdier)
+                }
+                val aktiviteter = normalizeJson(original, kontekster, meldinger)
+                dao.lagre(aktiviteter, meldinger.values, typer.values, navn.values, verdier.values, ident.toString().padStart(11, '0'), null)
             }
         }
     }
@@ -61,10 +78,7 @@ internal class ImporterAktivitetslogg(private val dispatcher: Dispatcher) {
             .registerModule(JavaTimeModule())
 
         private val tidsstempelformat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
-        private fun normalizeJson(original: JsonNode): List<Aktivitet> {
-            val kontekster = original.path("kontekster").map {
-                Kontekst(it.path("kontekstType").asText(), objectMapper.convertValue(it.path("kontekstMap")))
-            }
+        private fun normalizeJson(original: JsonNode, kontekster: List<Kontekst>, meldinger: MutableMap<String, Melding>): List<Aktivitet> {
             return original.path("aktiviteter").mapNotNull { aktivitet ->
                 tilNivå(aktivitet.path("alvorlighetsgrad").asText())?.let { nivå ->
                     val aktivitetKontekster = aktivitet.path("kontekster")
@@ -73,7 +87,7 @@ internal class ImporterAktivitetslogg(private val dispatcher: Dispatcher) {
                     Aktivitet(
                         id = UUID.fromString(aktivitet.path("id").asText()),
                         nivå = nivå,
-                        melding = aktivitet.path("melding").asText(),
+                        melding = meldinger.getOrPut(aktivitet.path("melding").asText()) { Melding(aktivitet.path("melding").asText()) },
                         tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText(), tidsstempelformat),
                         kontekster = aktivitetKontekster
                     )

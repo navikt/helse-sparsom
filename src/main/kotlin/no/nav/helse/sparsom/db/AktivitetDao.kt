@@ -1,6 +1,11 @@
 package no.nav.helse.sparsom.db
 
+import no.nav.helse.sparsom.*
 import no.nav.helse.sparsom.Aktivitet
+import no.nav.helse.sparsom.Kontekst
+import no.nav.helse.sparsom.KontekstNavn
+import no.nav.helse.sparsom.KontekstVerdi
+import no.nav.helse.sparsom.Melding
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
 import java.sql.Connection
@@ -11,6 +16,8 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
     constructor(dataSource: DataSource): this({ dataSource.connection }, true)
 
     private companion object {
+        private const val ROWS_PER_INSERT_STATEMENT = 10000
+
         private val logg = LoggerFactory.getLogger(AktivitetDao::class.java)
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
         @Language("PostgreSQL")
@@ -23,7 +30,7 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
 
         @Language("PostgreSQL")
         private val MELDING_INSERT = """
-            INSERT INTO melding(tekst) VALUES(?) 
+            INSERT INTO melding(tekst) VALUES %s 
             ON CONFLICT(tekst)
             DO UPDATE SET tekst=EXCLUDED.tekst 
             RETURNING id;
@@ -31,7 +38,7 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
 
         @Language("PostgreSQL")
         private val KONTEKST_TYPE_INSERT = """
-            INSERT INTO kontekst_type(type) VALUES(?) 
+            INSERT INTO kontekst_type(type) VALUES %s
             ON CONFLICT (type) 
             DO UPDATE SET type=EXCLUDED.type
             RETURNING id;
@@ -39,14 +46,14 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
 
         @Language("PostgreSQL")
         private val KONTEKST_NAVN_INSERT = """
-            INSERT INTO kontekst_navn(navn) VALUES(?) 
+            INSERT INTO kontekst_navn(navn) VALUES %s
             ON CONFLICT (navn) 
             DO UPDATE SET navn=EXCLUDED.navn
             RETURNING id;
         """
         @Language("PostgreSQL")
         private val KONTEKST_VERDI_INSERT = """
-            INSERT INTO kontekst_verdi(verdi) VALUES(?) 
+            INSERT INTO kontekst_verdi(verdi) VALUES %s
             ON CONFLICT (verdi) 
             DO UPDATE SET verdi=EXCLUDED.verdi
             RETURNING id;
@@ -54,7 +61,7 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
         @Language("PostgreSQL")
         private val AKTIVITET_INSERT = """
             INSERT INTO aktivitet(melding_id, personident_id, hendelse_id, level, tidsstempel, aktivitet_uuid) 
-            VALUES(?, ?, ?, CAST(? AS LEVEL), CAST(? AS timestamptz), CAST(? AS uuid)) 
+            VALUES %s
             ON CONFLICT (aktivitet_uuid) 
             DO UPDATE SET level=EXCLUDED.level
             RETURNING id;
@@ -62,7 +69,7 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
         @Language("PostgreSQL")
         private val AKTIVITET_KONTEKST_INSERT = """
             INSERT INTO aktivitet_kontekst(aktivitet_id, kontekst_type_id, kontekst_navn_id, kontekst_verdi_id) 
-            VALUES(?, ?, ?, ?) 
+            VALUES %s
             ON CONFLICT DO NOTHING;
         """
 
@@ -73,40 +80,70 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
         return connectionFactory().use(block)
     }
 
-    override fun lagre(aktiviteter: List<Aktivitet>, personident: String, hendelseId: Long?) {
+    override fun lagre(aktiviteter: List<Aktivitet>, meldinger: Collection<Melding>, konteksttyper: Collection<KontekstType>, kontekstNavn: Collection<KontekstNavn>, kontekstVerdi: Collection<KontekstVerdi>, personident: String, hendelseId: Long?) {
         makeConnection { connection ->
-            connection.prepareStatement(KONTEKST_TYPE_INSERT, RETURN_GENERATED_KEYS).use { statement ->
-                aktiviteter.forEach { it.lagreKontekstType(statement) }
-                statement.executeLargeBatch()
-                statement.generatedKeys.use { rs ->
-                    while (rs.next()) {
-                        val id = rs.getLong(1)
-                        check(aktiviteter.any { it.kontekstTypeId(id) }) {
-                            "forventet at noen trengte id til konteksttype"
+            konteksttyper.chunked(ROWS_PER_INSERT_STATEMENT).forEach { chunk ->
+                val sql = String.format(KONTEKST_TYPE_INSERT, chunk.indices.joinToString { "(?)" })
+                connection.prepareStatement(sql, RETURN_GENERATED_KEYS).use { statement ->
+                    var index = 1
+                    chunk.forEach {
+                        it.lagreKontekstType(statement, index)
+                        index += 1
+                    }
+                    statement.execute()
+                    statement.generatedKeys.use { rs ->
+                        index = 0
+                        while (rs.next()) {
+                            val id = rs.getLong(1)
+                            chunk[index].typeId(id)
+                            index += 1
+                        }
+                        check(index == chunk.size) { "lagret ulikt antall" }
+                    }
+                }
+            }
+
+            kontekstNavn.chunked(ROWS_PER_INSERT_STATEMENT).forEach { chunk ->
+                val sql = String.format(KONTEKST_NAVN_INSERT, chunk.indices.joinToString { "(?)" })
+                connection.prepareStatement(sql, RETURN_GENERATED_KEYS).use { statement ->
+                    var index = 1
+                    chunk.forEach {
+                        it.lagreKontekstNavn(statement, index)
+                        index += 1
+                    }
+                    statement.execute()
+                    statement.generatedKeys.use { rs ->
+                        index = 0
+                        while (rs.next()) {
+                            val id = rs.getLong(1)
+                            chunk[index].navnId(id)
+                            index += 1
+                        }
+                        check(index == chunk.size) {
+                            "lagret ulikt antall"
                         }
                     }
                 }
             }
-            connection.prepareStatement(KONTEKST_NAVN_INSERT, RETURN_GENERATED_KEYS).use { statement ->
-                aktiviteter.forEach { it.lagreKontekstNavn(statement) }
-                statement.executeLargeBatch()
-                statement.generatedKeys.use { rs ->
-                    while (rs.next()) {
-                        val id = rs.getLong(1)
-                        check(aktiviteter.any { it.kontekstNavnId(id) }) {
-                            "forventet at noen trengte id til kontekstnavn"
-                        }
+
+            kontekstVerdi.chunked(ROWS_PER_INSERT_STATEMENT).forEach { chunk ->
+                val sql = String.format(KONTEKST_VERDI_INSERT, chunk.indices.joinToString { "(?)" })
+                connection.prepareStatement(sql, RETURN_GENERATED_KEYS).use { statement ->
+                    var index = 1
+                    chunk.forEach {
+                        it.lagreKontekstVerdi(statement, index)
+                        index += 1
                     }
-                }
-            }
-            connection.prepareStatement(KONTEKST_VERDI_INSERT, RETURN_GENERATED_KEYS).use { statement ->
-                aktiviteter.forEach { it.lagreKontekstVerdi(statement) }
-                statement.executeLargeBatch()
-                statement.generatedKeys.use { rs ->
-                    while (rs.next()) {
-                        val id = rs.getLong(1)
-                        check(aktiviteter.any { it.kontekstVerdiId(id) }) {
-                            "forventet at noen trengte id til kontekstverdi"
+                    statement.execute()
+                    statement.generatedKeys.use { rs ->
+                        index = 0
+                        while (rs.next()) {
+                            val id = rs.getLong(1)
+                            chunk[index].verdiId(id)
+                            index += 1
+                        }
+                        check(index == chunk.size) {
+                            "lagret ulikt antall"
                         }
                     }
                 }
@@ -122,42 +159,66 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                 }
                 check(personidentId != 0L) { "har ikke personidentId" }
             }
-            connection.prepareStatement(MELDING_INSERT, RETURN_GENERATED_KEYS).use { statement ->
-                aktiviteter.forEach { it.lagreMelding(statement) }
-                statement.executeLargeBatch()
-                statement.generatedKeys.use { rs ->
-                    var index = 0
-                    while (rs.next()) {
-                        val id = rs.getLong(1)
-                        aktiviteter[index].meldingId(id)
+
+            meldinger.chunked(ROWS_PER_INSERT_STATEMENT).forEach { chunk ->
+                val sql = String.format(MELDING_INSERT, chunk.indices.joinToString { "(?)" })
+                connection.prepareStatement(sql, RETURN_GENERATED_KEYS).use { statement ->
+                    var index = 1
+                    chunk.forEach {
+                        it.lagreMelding(statement, index)
                         index += 1
                     }
-                    check(index == aktiviteter.size) {
-                        "forventet å få id for alle meldinger, uavhengig om det er duplikater"
+                    statement.execute()
+                    statement.generatedKeys.use { rs ->
+                        index = 0
+                        while (rs.next()) {
+                            val id = rs.getLong(1)
+                            chunk[index].meldingId(id)
+                            index += 1
+                        }
+                        check(index == chunk.size) {
+                            "forventet å få id for alle meldinger, uavhengig om det er duplikater"
+                        }
                     }
                 }
             }
-            connection.prepareStatement(AKTIVITET_INSERT, RETURN_GENERATED_KEYS).use { statement ->
-                aktiviteter.forEach { it.lagreAktivitet(statement, personidentId, hendelseId) }
-                statement.executeLargeBatch().onEachIndexed { index, affectedRows ->
-                    aktiviteter[index].bleLagret(affectedRows == 1L)
-                }.sum().also {
-                    logg.info("$it aktiviteter ble lagret")
-                }
-                statement.generatedKeys.use { rs ->
-                    var index = 0
-                    while (rs.next()) {
-                        aktiviteter[index].aktivitetId(rs.getLong(1))
-                        index += 1
+            aktiviteter.chunked(ROWS_PER_INSERT_STATEMENT).forEach { chunk ->
+                val sql = String.format(AKTIVITET_INSERT, chunk.indices.joinToString { "(?, ?, ?, CAST(? AS LEVEL), CAST(? AS timestamptz), CAST(? AS uuid))" })
+                connection.prepareStatement(sql, RETURN_GENERATED_KEYS).use { statement ->
+                    var index = 1
+                    chunk.forEach {
+                        it.lagreAktivitet(statement, index, personidentId, hendelseId)
+                        index += 6
                     }
-                    check(index == aktiviteter.size) {
-                        "forventet å få id for alle meldinger, uavhengig om det er duplikater"
+                    statement.execute()
+                    logg.info("${chunk.size} aktiviteter ble lagret")
+                    statement.generatedKeys.use { rs ->
+                        index = 0
+                        while (rs.next()) {
+                            chunk[index].aktivitetId(rs.getLong(1))
+                            index += 1
+                        }
+                        check(index == chunk.size) {
+                            "forventet å få id for alle meldinger, uavhengig om det er duplikater"
+                        }
                     }
                 }
-            }
-            connection.prepareStatement(AKTIVITET_KONTEKST_INSERT).use { statement ->
-                aktiviteter.forEach { it.kobleAktivitetOgKontekst(statement) }
-                statement.executeLargeBatch()
+                chunk
+                    .flatMap { it.kobleAktivitetOgKontekst() }
+                    .chunked(ROWS_PER_INSERT_STATEMENT).forEach { aktivitetKontekster ->
+                        val sql2 = String.format(AKTIVITET_KONTEKST_INSERT, aktivitetKontekster.indices.joinToString { "(?, ?, ?, ?)" })
+                        connection.prepareStatement(sql2).use { statement ->
+                            var index = 1
+                            aktivitetKontekster.forEach { rad ->
+                                statement.setLong(index + 0, rad[0])
+                                statement.setLong(index + 1, rad[1])
+                                statement.setLong(index + 2, rad[2])
+                                statement.setLong(index + 3, rad[3])
+                                index += 4
+                            }
+                            statement.execute()
+                        }
+                    }
             }
         }
     }
