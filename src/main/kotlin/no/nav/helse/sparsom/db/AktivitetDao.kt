@@ -7,8 +7,10 @@ import no.nav.helse.sparsom.KontekstNavn
 import no.nav.helse.sparsom.KontekstVerdi
 import no.nav.helse.sparsom.Melding
 import org.intellij.lang.annotations.Language
+import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory
 import java.sql.Connection
+import java.sql.PreparedStatement
 import java.sql.Statement.RETURN_GENERATED_KEYS
 import javax.sql.DataSource
 
@@ -90,7 +92,7 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                         it.lagreKontekstType(statement, index)
                         index += 1
                     }
-                    statement.execute()
+                    retryDeadlock(statement)
                     statement.generatedKeys.use { rs ->
                         index = 0
                         while (rs.next()) {
@@ -111,7 +113,7 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                         it.lagreKontekstNavn(statement, index)
                         index += 1
                     }
-                    statement.execute()
+                    retryDeadlock(statement)
                     statement.generatedKeys.use { rs ->
                         index = 0
                         while (rs.next()) {
@@ -134,7 +136,7 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                         it.lagreKontekstVerdi(statement, index)
                         index += 1
                     }
-                    statement.execute()
+                    retryDeadlock(statement)
                     statement.generatedKeys.use { rs ->
                         index = 0
                         while (rs.next()) {
@@ -152,7 +154,7 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
             var personidentId: Long = 0L
             connection.prepareStatement(PERSON_INSERT, RETURN_GENERATED_KEYS).use { statement ->
                 statement.setString(1, personident)
-                statement.execute()
+                retryDeadlock(statement)
                 statement.generatedKeys.use { rs ->
                     rs.next()
                     personidentId = rs.getLong(1)
@@ -168,7 +170,7 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                         it.lagreMelding(statement, index)
                         index += 1
                     }
-                    statement.execute()
+                    retryDeadlock(statement)
                     statement.generatedKeys.use { rs ->
                         index = 0
                         while (rs.next()) {
@@ -190,7 +192,7 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                         it.lagreAktivitet(statement, index, personidentId, hendelseId)
                         index += 6
                     }
-                    statement.execute()
+                    retryDeadlock(statement)
                     logg.info("${chunk.size} aktiviteter ble lagret")
                     statement.generatedKeys.use { rs ->
                         index = 0
@@ -216,10 +218,22 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                                 statement.setLong(index + 3, rad[3])
                                 index += 4
                             }
-                            statement.execute()
+                            retryDeadlock(statement)
                         }
                     }
             }
+        }
+    }
+
+    private fun retryDeadlock(statement: PreparedStatement, retryCount: Int = 0) {
+        try {
+            statement.execute()
+        } catch (err: PSQLException) {
+            if (retryCount < 4 && err.message?.contains("deadlock detected") == true) {
+                logg.info("forsøker på nytt pga. deadlock")
+                return retryDeadlock(statement, retryCount + 1)
+            }
+            throw err
         }
     }
 }
