@@ -229,7 +229,7 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
         try {
             statement.execute()
         } catch (err: PSQLException) {
-            if (retryCount < 4 && err.message?.contains("deadlock detected") == true) {
+            if (retryCount < 30 && err.message?.contains("deadlock detected") == true) {
                 logg.info("forsøker på nytt pga. deadlock")
                 return retryDeadlock(statement, retryCount + 1)
             }
