@@ -64,7 +64,7 @@ internal class HentAktivitetslogg(private val dispatcher: Dispatcher) {
     }
 
     private companion object {
-        private val log = LoggerFactory.getLogger(V3__Datalast::class.java)
+        private val log = LoggerFactory.getLogger(HentAktivitetslogg::class.java)
         private val objectMapper = jacksonObjectMapper()
             .registerModule(JavaTimeModule())
 

@@ -26,7 +26,8 @@ private fun createApp(env: Map<String, String>): RapidsConnection {
                 dataSourceBuilder.migrate()
 
                 val connection = dataSource.connection
-                val spleisConfig = HikariConfig().apply {
+
+                /*val spleisConfig = HikariConfig().apply {
                     jdbcUrl = String.format(
                         "jdbc:postgresql:///%s?%s&%s",
                         env["DATABASE_SPARSOM_DATABASE"],
@@ -41,7 +42,7 @@ private fun createApp(env: Map<String, String>): RapidsConnection {
                 }
                 val spleisDs = HikariDataSource(spleisConfig)
                 HentAktivitetslogg(Dispatcher("arbeidstabell_step1", connection))
-                    .migrate(connection, spleisDs.connection)
+                    .migrate(connection, spleisDs.connection)*/
 
                 ImporterAktivitetslogg(Dispatcher("arbeidstabell_step2", connection))
                     .migrate(connection)

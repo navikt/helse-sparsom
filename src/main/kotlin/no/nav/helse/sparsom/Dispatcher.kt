@@ -13,18 +13,14 @@ internal class Dispatcher(
         private val log = LoggerFactory.getLogger(Dispatcher::class.java)
     }
 
-    private val updateLock: PreparedStatement
-
-    init {
-        connection.autoCommit = false
-        // todo: resource is not properly closed, should use '.use { } '
-        updateLock = connection.prepareStatement("UPDATE $table SET ferdig=CAST(? as timestamptz) WHERE id=?;")
-    }
+    private val updateLock: PreparedStatement = connection.prepareStatement("UPDATE $table SET ferdig=CAST(? as timestamptz) WHERE id=?;")
 
     fun hentArbeid(): Work? {
         log.info("henter arbeid")
         var work: Work? = null
 
+        val before = connection.autoCommit
+        connection.autoCommit = false
         connection.prepareStatement("SELECT id,ident FROM $table WHERE startet IS NULL LIMIT 1 FOR UPDATE SKIP LOCKED;").use { stmt ->
             stmt.executeQuery().use { rs ->
                 if (rs.next()) {
@@ -40,6 +36,7 @@ internal class Dispatcher(
         }
         // må committe for å frigjøre låsen
         connection.commit()
+        connection.autoCommit = before
         log.info("fant arbeid={}", work)
         return work
     }

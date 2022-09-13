@@ -16,11 +16,11 @@ import java.util.*
 internal class ImporterAktivitetslogg(private val dispatcher: Dispatcher) {
 
     fun migrate(connection: Connection) = connection.use {
-        connection.autoCommit = false
+        connection.autoCommit = true
         try {
             utførMigrering(AktivitetDao({ connection }, false), connection)
         } catch (e: Exception) {
-            connection.rollback()
+            if (connection.autoCommit) connection.rollback()
             throw e
         }
     }
@@ -30,9 +30,9 @@ internal class ImporterAktivitetslogg(private val dispatcher: Dispatcher) {
             var arbeid: Work? = dispatcher.hentArbeid() ?: return@use
             while (arbeid != null) {
                 /* utfør arbeid */
+                check(connection.autoCommit)
                 utførArbeid(dao, fetchAktivitetsloggStatement, arbeid)
                 log.info("committer ferdig utført arbeid")
-                connection.commit()
                 arbeid = dispatcher.hentArbeid()
             }
         }

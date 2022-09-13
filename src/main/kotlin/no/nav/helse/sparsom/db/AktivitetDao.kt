@@ -87,7 +87,6 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                     }
                 }
             }
-            if (!connection.autoCommit) connection.commit()
             connection.prepareStatement(KONTEKST_NAVN_INSERT, RETURN_GENERATED_KEYS).use { statement ->
                 aktiviteter.forEach { it.lagreKontekstNavn(statement) }
                 statement.executeLargeBatch()
@@ -100,7 +99,6 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                     }
                 }
             }
-            if (!connection.autoCommit) connection.commit()
             connection.prepareStatement(KONTEKST_VERDI_INSERT, RETURN_GENERATED_KEYS).use { statement ->
                 aktiviteter.forEach { it.lagreKontekstVerdi(statement) }
                 statement.executeLargeBatch()
@@ -113,7 +111,6 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                     }
                 }
             }
-            if (!connection.autoCommit) connection.commit()
 
             var personidentId: Long = 0L
             connection.prepareStatement(PERSON_INSERT, RETURN_GENERATED_KEYS).use { statement ->
@@ -140,7 +137,6 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                     }
                 }
             }
-            if (!connection.autoCommit) connection.commit()
             connection.prepareStatement(AKTIVITET_INSERT, RETURN_GENERATED_KEYS).use { statement ->
                 aktiviteter.forEach { it.lagreAktivitet(statement, personidentId, hendelseId) }
                 statement.executeLargeBatch().onEachIndexed { index, affectedRows ->
@@ -159,12 +155,10 @@ internal class AktivitetDao(private val connectionFactory: () -> Connection, pri
                     }
                 }
             }
-            if (!connection.autoCommit) connection.commit()
             connection.prepareStatement(AKTIVITET_KONTEKST_INSERT).use { statement ->
                 aktiviteter.forEach { it.kobleAktivitetOgKontekst(statement) }
                 statement.executeLargeBatch()
             }
-            if (!connection.autoCommit) connection.commit()
         }
     }
 }
