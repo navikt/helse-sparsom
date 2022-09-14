@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.time.LocalDateTime
+import java.time.LocalTime
 
 internal class Dispatcher(
     private val table: String,
@@ -16,6 +17,13 @@ internal class Dispatcher(
     private val updateLock: PreparedStatement = connection.prepareStatement("UPDATE $table SET ferdig=CAST(? as timestamptz) WHERE id=?;")
 
     fun hentArbeid(): Work? {
+        val nå = LocalTime.now()
+        val etterArbeidstid = LocalTime.of(18, 0, 0)
+        val førArbeidstid = LocalTime.of(5, 0, 0)
+        if (nå in førArbeidstid..etterArbeidstid) {
+            log.info("stopper arbeidet ettersom det snart er morgen, og vil ikke risikere å klogge til prod")
+            return null
+        }
         log.info("henter arbeid")
         var work: Work? = null
 
