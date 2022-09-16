@@ -1,0 +1,1 @@
+create index if not exists idx_level_varsel_melding on aktivitet(level,melding_id) where level='VARSEL'::level;
