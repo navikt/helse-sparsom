@@ -57,15 +57,13 @@ internal class AktivitetRiver(
                     Kontekst(typer.getOrPut(type) { KontekstType(type) }, kontekstverdier)
                 }
 
-                tilNivå(aktivitet.path("nivå").asText())?.let { nivå ->
-                    Aktivitet(
-                        id = UUID.fromString(aktivitet.path("id").asText()),
-                        nivå = nivå,
-                        melding = meldinger.getOrPut(aktivitet.path("melding").asText()) { Melding(aktivitet.path("melding").asText()) },
-                        tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText()),
-                        kontekster = kontekster
-                    )
-                }
+                Aktivitet(
+                    id = UUID.fromString(aktivitet.path("id").asText()),
+                    nivå = Nivå.valueOf(aktivitet.path("nivå").asText()),
+                    melding = meldinger.getOrPut(aktivitet.path("melding").asText()) { Melding(aktivitet.path("melding").asText()) },
+                    tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText()),
+                    kontekster = kontekster
+                )
             }
             aktivitetDao.lagre(aktiviteter, meldinger.values, typer.values, navn.values, verdier.values, fødselsnummer, id)
         }
