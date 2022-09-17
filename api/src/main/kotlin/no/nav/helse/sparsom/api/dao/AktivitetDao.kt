@@ -37,7 +37,7 @@ internal class AktivitetDao(private val dataSource: DataSource) {
                 .groupBy(Triple<String, *, *>::first)
                 .mapValues { verdier ->
                     verdier.value.associate { kontekstverdi ->
-                        kontekstverdi.second to kontekstverdi.first
+                        kontekstverdi.second to kontekstverdi.third
                     }
                 }
         )
