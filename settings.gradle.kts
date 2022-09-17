@@ -1,3 +1,2 @@
-
-rootProject.name = "helse-sparsom"
-
+rootProject.name = "sparsom"
+include("api", "sparsom")

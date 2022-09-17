@@ -34,7 +34,7 @@ jobs:
       - name: test and build
         run: ./gradlew test build
       - name: build docker image
-        run: docker build . --pull -t ${{ needs.set_version.outputs.image }}
+        run: docker build . --pull -f Dockerfile -t ${{ needs.set_version.outputs.image }} sparsom
       - name: push docker image
         run: |
           docker login ghcr.io --username "$GITHUB_REPOSITORY" -p ${{ secrets.GITHUB_TOKEN }}

@@ -8,10 +8,7 @@ import org.flywaydb.core.api.migration.BaseJavaMigration
 import org.flywaydb.core.api.migration.Context
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
-import java.sql.Connection
-import java.sql.PreparedStatement
 import java.time.Duration
-import kotlin.system.measureTimeMillis
 
 internal class V22__FyllArbeidstabeller : BaseJavaMigration() {
 

@@ -1,74 +1,78 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
-val mainClass = "no.nav.helse.sparsom.AppKt"
-
-val junitVersion = "5.9.0"
-val flywayCoreVersion = "9.1.6"
-val kotliqueryVersion = "1.9.0"
-val postgresqlVersion = "42.4.2"
-val hikariCPVersion = "5.0.1"
-val testcontainersPostgresqlVersion = "1.17.3"
-val mockkVersion = "1.12.5"
-val logbackClassicVersion = "1.2.11"
-val logstashVersion = "7.2"
-val commonsCodecVersion = "1.15"
-val rapidsAndRiversVersion = "2022072721371658950659.c1e8f7bf35c6"
-val cloudSqlVersion = "1.6.0"
-
 plugins {
-    kotlin("jvm") version "1.7.10"
+    kotlin("jvm") version "1.7.0"
 }
 
-repositories {
-    maven("https://jitpack.io")
-    mavenCentral()
-}
+val kotliqueryVersion = "1.9.0"
+val hikariVersion = "5.0.1"
+val jacksonVersion = "2.13.4"
+val junitJupiterVersion = "5.9.0"
+val postgresqlVersion = "42.5.0"
+val logbackClassicVersion = "1.4.0"
+val logstashVersion = "7.2"
+val jvmTargetVersion = "17"
 
-dependencies {
-    implementation("org.flywaydb:flyway-core:$flywayCoreVersion")
-    implementation("com.github.seratch:kotliquery:$kotliqueryVersion")
-    implementation("org.postgresql:postgresql:$postgresqlVersion")
-    implementation("com.google.cloud.sql:postgres-socket-factory:$cloudSqlVersion")
-    implementation("com.zaxxer:HikariCP:$hikariCPVersion")
-    implementation("commons-codec:commons-codec:$commonsCodecVersion")
-    implementation("ch.qos.logback:logback-classic:$logbackClassicVersion")
-    implementation("net.logstash.logback:logstash-logback-encoder:$logstashVersion") {
-        exclude("com.fasterxml.jackson.core")
-        exclude("com.fasterxml.jackson.dataformat")
+allprojects {
+    group = "no.nav.helse"
+    version = properties["version"] ?: "local-build"
+
+    apply(plugin = "org.jetbrains.kotlin.jvm")
+
+    repositories {
+        mavenCentral()
+        maven("https://jitpack.io")
     }
 
-    api("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
+    dependencies {
+        implementation("org.postgresql:postgresql:$postgresqlVersion")
+        implementation("com.github.seratch:kotliquery:$kotliqueryVersion")
+        implementation("ch.qos.logback:logback-classic:$logbackClassicVersion")
+        implementation("net.logstash.logback:logstash-logback-encoder:$logstashVersion") {
+            exclude("com.fasterxml.jackson.core")
+            exclude("com.fasterxml.jackson.dataformat")
+        }
+        implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion") {
+            exclude("org.jetbrains.kotlin:kotlin-reflect")
+        }
+        implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
 
-    testImplementation("io.mockk:mockk:$mockkVersion")
-    testImplementation("org.testcontainers:postgresql:$testcontainersPostgresqlVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
-}
+        implementation("com.zaxxer:HikariCP:$hikariVersion")
 
-tasks {
-    test {
-        useJUnitPlatform()
+        testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
+        testImplementation("org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion")
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
     }
-    withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "1.8"
-    }
 
-    withType<Jar> {
-        archiveBaseName.set("app")
-
-        manifest {
-            attributes["Main-Class"] = mainClass
-            attributes["Class-Path"] = configurations.runtimeClasspath.get().joinToString(separator = " ") {
-                it.name
-            }
+    tasks {
+        compileKotlin {
+            kotlinOptions.jvmTarget = jvmTargetVersion
         }
 
-        doLast {
-            configurations.runtimeClasspath.get().forEach {
-                val file = File("$buildDir/libs/${it.name}")
-                if (!file.exists())
-                    it.copyTo(file)
+        compileTestKotlin {
+            kotlinOptions.jvmTarget = jvmTargetVersion
+        }
+
+        withType<Wrapper> {
+            gradleVersion = "7.4.2"
+        }
+
+    }
+}
+
+subprojects {
+    apply(plugin = "org.jetbrains.kotlin.jvm")
+
+    tasks {
+        withType<Test> {
+            useJUnitPlatform()
+            testLogging {
+                events("skipped", "failed")
             }
         }
+    }
+
+    dependencies {
+        testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
+        testImplementation("org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion")
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
     }
 }
