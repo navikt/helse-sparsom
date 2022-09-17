@@ -26,7 +26,9 @@ internal class AktivitetDao(private val dataSource: DataSource) {
 
     private fun mapRow(row: Row) =
         mapOf(
+            "id" to row.long("id"),
             "tidsstempel" to row.string("tidsstempel"),
+            "nivå" to row.string("level"),
             "tekst" to row.string("tekst"),
             "kontekster" to row.string("kontekster")
                 .split(ROW_SEPARATOR)
