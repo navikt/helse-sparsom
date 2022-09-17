@@ -41,6 +41,8 @@ spec:
         databases:
           - name: sparsom
             envVarPrefix: DATABASE
+            users:
+            - name: sparsom-api
   secureLogs:
     enabled: true
   env:
