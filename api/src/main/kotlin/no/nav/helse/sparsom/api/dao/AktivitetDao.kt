@@ -17,7 +17,7 @@ internal class AktivitetDao(private val dataSource: DataSource) {
     }
 
     fun hentAktiviteterFor(kontekstNavn: String, kontekstVerdi: String) = sessionOf(dataSource).use { session ->
-        session.run(queryOf(AKTIVITETER_FOR_IDENT, kontekstVerdi, kontekstNavn).map(::mapRow).asList)
+        session.run(queryOf(AKTIVITETER_FOR_KONTEKST, kontekstVerdi, kontekstNavn).map(::mapRow).asList)
     }
 
     fun hentAktiviteterFor(ident: String) = sessionOf(dataSource).use { session ->
