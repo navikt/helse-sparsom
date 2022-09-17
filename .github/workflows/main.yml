@@ -19,6 +19,7 @@ jobs:
         run: echo "TAG=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_ENV
     outputs:
       image: ghcr.io/${{ github.repository }}/sparsom:${{ env.TAG }}
+      image_api: ghcr.io/${{ github.repository }}/sparsom-api:${{ env.TAG }}
 
   build:
     name: build docker image
@@ -35,10 +36,13 @@ jobs:
         run: ./gradlew test build
       - name: build docker image
         run: docker build sparsom --pull -f Dockerfile -t ${{ needs.set_version.outputs.image }}
+      - name: build api docker image
+        run: docker build api --pull -f Dockerfile -t ${{ needs.set_version.outputs.image_api }}
       - name: push docker image
         run: |
           docker login ghcr.io --username "$GITHUB_REPOSITORY" -p ${{ secrets.GITHUB_TOKEN }}
           docker push ${{ needs.set_version.outputs.image }}
+          docker push ${{ needs.set_version.outputs.image_api }}
 
   snyk:
     name: check vulnerabilities
@@ -65,6 +69,12 @@ jobs:
           CLUSTER: dev-gcp
           RESOURCE: deploy/dev.yml
           IMAGE: ${{ needs.set_version.outputs.image }}
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: dev-gcp
+          RESOURCE: deploy/dev-api.yml
+          IMAGE: ${{ needs.set_version.outputs.image_api }}
 
   deployProd:
     name: deploy to prod

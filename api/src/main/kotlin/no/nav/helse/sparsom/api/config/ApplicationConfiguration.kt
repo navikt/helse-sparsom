@@ -25,11 +25,11 @@ internal class ApplicationConfiguration(env: Map<String, String> = System.getenv
     internal val dataSourceConfiguration = DataSourceConfiguration(
         jdbcUrl = env["DATABASE_JDBC_URL"],
         gcpProjectId = env["GCP_TEAM_PROJECT_ID"],
-        databaseRegion = env["DATABASE_REGION"],
-        databaseInstance = env["DATABASE_INSTANCE"],
-        databaseUsername = env["DATABASE_SPLEIS_API_USERNAME"],
-        databasePassword = env["DATABASE_SPLEIS_API_PASSWORD"],
-        databaseName = env["DATABASE_DATABASE"]
+        databaseRegion = env["DATABASE_SPARSOM_API_REGION"],
+        databaseInstance = env["DATABASE_SPARSOM_API_INSTANCE"],
+        databaseUsername = env["DATABASE_SPARSOM_API_USERNAME"],
+        databasePassword = env["DATABASE_SPARSOM_API_PASSWORD"],
+        databaseName = env["DATABASE_SPARSOM_API_DATABASE"]
     )
 }
 

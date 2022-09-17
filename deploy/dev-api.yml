@@ -1,0 +1,58 @@
+apiVersion: nais.io/v1alpha1
+kind: Application
+metadata:
+  name: sparsom-api
+  namespace: tbd
+  labels:
+    team: tbd
+spec:
+  image: {{image}}
+  port: 8080
+  liveness:
+    path: isalive
+    initialDelay: 1
+  readiness:
+    path: isready
+    initialDelay: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1024Mi
+    requests:
+      cpu: 50m
+      memory: 512Mi
+  replicas:
+    min: 1
+    max: 4
+    cpuThresholdPercentage: 70
+  prometheus:
+    enabled: true
+    path: /metrics
+  azure:
+    application:
+      enabled: true
+      tenant: nav.no
+      claims:
+        groups:
+        - id: "f787f900-6697-440d-a086-d5bb56e26a9c"
+  accessPolicy:
+    inbound:
+      rules:
+      - application: spanner
+        namespace: tbd
+        cluster: dev-gcp
+  envFrom:
+    - secret: google-sql-sparsom-sparsom-sparsom-api-9af8353e
+  gcp:
+    permissions:
+      - resource:
+          apiVersion: resourcemanager.cnrm.cloud.google.com/v1beta1
+          kind: Project
+        role: roles/cloudsql.client
+  secureLogs:
+    enabled: true
+  env:
+    - name: DATABASE_SPARSOM_API_REGION
+      value: "europe-north1"
+    - name: DATABASE_SPARSOM_API_INSTANCE
+      value: "sparsom"
