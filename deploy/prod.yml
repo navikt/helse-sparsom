@@ -41,6 +41,8 @@ spec:
         databases:
           - name: sparsom
             envVarPrefix: DATABASE
+            users:
+            - name: sparsom-api
         flags:
           - name: max_connections
             value: "100"
