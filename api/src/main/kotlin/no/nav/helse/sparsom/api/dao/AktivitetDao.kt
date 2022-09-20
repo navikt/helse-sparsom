@@ -28,7 +28,7 @@ internal class AktivitetDao(private val dataSource: DataSource) {
     private fun mapRow(row: Row) =
         AktivitetDto(
             id = row.long("id"),
-            tidsstempel = LocalDateTime.parse(row.string("tidsstempel")),
+            tidsstempel = row.localDateTime("tidsstempel"),
             nivå = NivåDto.valueOf(row.string("level")),
             tekst = row.string("tekst"),
             kontekster = row.string("kontekster")
