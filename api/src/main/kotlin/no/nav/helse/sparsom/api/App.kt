@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.ktor.http.ContentType
+import io.ktor.http.*
 import io.ktor.serialization.jackson.JacksonConverter
 import io.ktor.server.application.install
 import io.ktor.server.engine.applicationEngineEnvironment
@@ -17,7 +17,6 @@ import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.path
 import java.util.UUID
-import java.util.concurrent.atomic.AtomicInteger
 import no.nav.helse.sparsom.api.config.ApplicationConfiguration
 import no.nav.helse.sparsom.api.config.AzureAdAppConfig
 import no.nav.helse.sparsom.api.config.DataSourceConfiguration
@@ -46,6 +45,7 @@ internal fun createApp(ktorConfig: KtorConfig, azureConfig: AzureAdAppConfig, da
         factory = Netty,
         environment = applicationEngineEnvironment {
             ktorConfig.configure(this)
+            log = LoggerFactory.getLogger("no.nav.helse.sparsom.api.App")
             module {
                 install(CallId) {
                     header("callId")
@@ -55,6 +55,7 @@ internal fun createApp(ktorConfig: KtorConfig, azureConfig: AzureAdAppConfig, da
                 install(CallLogging) {
                     logger = httpTraceLog
                     level = Level.INFO
+                    disableDefaultColors()
                     callIdMdc("callId")
                     filter { call -> call.request.path().startsWith("/api/") }
                 }
