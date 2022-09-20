@@ -93,7 +93,7 @@ internal class AktivitetDao(private val dataSource: DataSource) {
                 from aktivitet_kontekst ak
                 inner join kontekst_verdi kv on ak.kontekst_verdi_id = kv.id
                 inner join kontekst_navn k on ak.kontekst_navn_id = k.id
-                where kv.verdi = ':ident' and k.navn='aktørId'
+                where kv.verdi = :ident and k.navn='aktørId'
             )
             (
                 select a.id, a.level, a.tidsstempel, m.tekst, string_agg(concat_ws('$VALUE_SEPARATOR', kt.type, kn.navn, kv.verdi), '$ROW_SEPARATOR') as kontekster 
@@ -116,7 +116,7 @@ internal class AktivitetDao(private val dataSource: DataSource) {
                 inner join kontekst_type kt on kt.id = ak.kontekst_type_id
                 inner join kontekst_navn kn on kn.id = ak.kontekst_navn_id
                 inner join kontekst_verdi kv on kv.id = ak.kontekst_verdi_id
-                where p.ident = ':ident'
+                where p.ident = :ident
                 group by a.id, a.tidsstempel, m.tekst
             )
             order by tidsstempel; 

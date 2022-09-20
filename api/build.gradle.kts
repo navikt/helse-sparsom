@@ -3,6 +3,7 @@ val ktorVersion = "2.0.1"
 val wireMockVersion = "2.31.0"
 val cloudSqlVersion = "1.6.0"
 val awaitilityVersion = "4.1.1"
+val flywayCoreVersion = "9.1.6"
 val testcontainersPostgresqlVersion = "1.17.1"
 val mockVersion = "1.12.4"
 
@@ -19,6 +20,11 @@ dependencies {
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion") {
         exclude(group = "junit")
+    }
+
+    testImplementation("org.flywaydb:flyway-core:$flywayCoreVersion")
+    testImplementation("org.testcontainers:postgresql:$testcontainersPostgresqlVersion") {
+        exclude("com.fasterxml.jackson.core")
     }
 }
 
