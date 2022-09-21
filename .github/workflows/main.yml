@@ -20,6 +20,7 @@ jobs:
     outputs:
       image: ghcr.io/${{ github.repository }}/sparsom:${{ env.TAG }}
       image_api: ghcr.io/${{ github.repository }}/sparsom-api:${{ env.TAG }}
+      image_job: ghcr.io/${{ github.repository }}/sparsom-job:${{ env.TAG }}
 
   build:
     name: build docker image
@@ -38,11 +39,14 @@ jobs:
         run: docker build sparsom --pull -f Dockerfile -t ${{ needs.set_version.outputs.image }}
       - name: build api docker image
         run: docker build api --pull -f Dockerfile -t ${{ needs.set_version.outputs.image_api }}
+      - name: build job docker image
+        run: docker build job --pull -f Dockerfile -t ${{ needs.set_version.outputs.image_job }}
       - name: push docker image
         run: |
           docker login ghcr.io --username "$GITHUB_REPOSITORY" -p ${{ secrets.GITHUB_TOKEN }}
           docker push ${{ needs.set_version.outputs.image }}
           docker push ${{ needs.set_version.outputs.image_api }}
+          docker push ${{ needs.set_version.outputs.image_job }}
 
   snyk:
     name: check vulnerabilities
