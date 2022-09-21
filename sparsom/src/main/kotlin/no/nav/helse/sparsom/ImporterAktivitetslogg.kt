@@ -98,6 +98,7 @@ internal class ImporterAktivitetslogg(private val dispatcher: Dispatcher) {
         private fun tilNivå(value: String) = when (value) {
             "INFO" -> Nivå.INFO
             "WARN" -> Nivå.VARSEL
+            "BEHOV" -> Nivå.BEHOV
             "ERROR" -> Nivå.FUNKSJONELL_FEIL
             "SEVERE" -> Nivå.LOGISK_FEIL
             else -> null

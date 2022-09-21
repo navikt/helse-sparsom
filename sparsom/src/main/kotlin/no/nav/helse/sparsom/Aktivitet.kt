@@ -182,6 +182,7 @@ internal class Kontekst(
 }
 enum class Nivå {
     INFO,
+    BEHOV,
     VARSEL,
     FUNKSJONELL_FEIL,
     LOGISK_FEIL;

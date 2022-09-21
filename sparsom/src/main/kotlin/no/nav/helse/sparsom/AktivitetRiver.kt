@@ -22,8 +22,7 @@ internal class AktivitetRiver(
                 it.requireKey("fødselsnummer", "@id", "@opprettet")
                 it.requireArray("aktiviteter") {
                     require("id") { UUID.fromString(it.asText()) }
-                    requireAny("nivå", Nivå.values().map { nivå -> nivå.toString() })
-                    requireKey("melding")
+                    requireKey("nivå", "melding")
                     require("tidsstempel", JsonNode::asLocalDateTime)
                     requireArray("kontekster") {
                         requireKey("konteksttype", "kontekstmap")
@@ -44,27 +43,31 @@ internal class AktivitetRiver(
             val verdier = mutableMapOf<String, KontekstVerdi>()
             val meldinger = mutableMapOf<String, Melding>()
 
-            val aktiviteter = packet["aktiviteter"].mapNotNull { aktivitet ->
-                val kontekster = aktivitet.path("kontekster").map {
-                    val kontekstverdier = mutableMapOf<KontekstNavn, KontekstVerdi>()
-
-                    it.path("kontekstmap").fields().forEach { (kontekstNavn, kontekstVerdi) ->
-                        val kn = navn.getOrPut(kontekstNavn) { KontekstNavn(kontekstNavn) }
-                        val kv = verdier.getOrPut(kontekstVerdi.asText()) { KontekstVerdi(kontekstVerdi.asText()) }
-                        kontekstverdier[kn] = kv
-                    }
-                    val type = it.path("konteksttype").asText()
-                    Kontekst(typer.getOrPut(type) { KontekstType(type) }, kontekstverdier)
+            val aktiviteter = packet["aktiviteter"]
+                .filter { aktivitet ->
+                    aktivitet.path("nivå").asText() in Nivå.values().map(Enum<*>::name)
                 }
+                .mapNotNull { aktivitet ->
+                    val kontekster = aktivitet.path("kontekster").map {
+                        val kontekstverdier = mutableMapOf<KontekstNavn, KontekstVerdi>()
 
-                Aktivitet(
-                    id = UUID.fromString(aktivitet.path("id").asText()),
-                    nivå = Nivå.valueOf(aktivitet.path("nivå").asText()),
-                    melding = meldinger.getOrPut(aktivitet.path("melding").asText()) { Melding(aktivitet.path("melding").asText()) },
-                    tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText()),
-                    kontekster = kontekster
-                )
-            }
+                        it.path("kontekstmap").fields().forEach { (kontekstNavn, kontekstVerdi) ->
+                            val kn = navn.getOrPut(kontekstNavn) { KontekstNavn(kontekstNavn) }
+                            val kv = verdier.getOrPut(kontekstVerdi.asText()) { KontekstVerdi(kontekstVerdi.asText()) }
+                            kontekstverdier[kn] = kv
+                        }
+                        val type = it.path("konteksttype").asText()
+                        Kontekst(typer.getOrPut(type) { KontekstType(type) }, kontekstverdier)
+                    }
+
+                    Aktivitet(
+                        id = UUID.fromString(aktivitet.path("id").asText()),
+                        nivå = Nivå.valueOf(aktivitet.path("nivå").asText()),
+                        melding = meldinger.getOrPut(aktivitet.path("melding").asText()) { Melding(aktivitet.path("melding").asText()) },
+                        tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText()),
+                        kontekster = kontekster
+                    )
+                }
             aktivitetDao.lagre(aktiviteter, meldinger.values, typer.values, navn.values, verdier.values, fødselsnummer, id)
         }
         logger.info("lagrer aktiviteter fra hendelse {}. Tid brukt: ${tidBrukt}ms", keyValue("meldingsreferanseId", hendelseId))
@@ -72,12 +75,5 @@ internal class AktivitetRiver(
 
     private companion object {
         private val logger = LoggerFactory.getLogger(AktivitetRiver::class.java)
-        private fun tilNivå(value: String) = when (value) {
-            "INFO" -> Nivå.INFO
-            "WARNING" -> Nivå.VARSEL
-            "ERROR" -> Nivå.FUNKSJONELL_FEIL
-            "SEVERE" -> Nivå.LOGISK_FEIL
-            else -> null
-        }
     }
 }
