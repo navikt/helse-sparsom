@@ -14,7 +14,7 @@ import java.sql.PreparedStatement
 import java.sql.Statement.RETURN_GENERATED_KEYS
 import javax.sql.DataSource
 
-internal class AktivitetDao(private val connectionFactory: () -> Connection, private val closeAfterUse: Boolean) : AktivitetRepository {
+class AktivitetDao(private val connectionFactory: () -> Connection, private val closeAfterUse: Boolean) : AktivitetRepository {
     constructor(dataSource: DataSource): this({ dataSource.connection }, true)
 
     private companion object {

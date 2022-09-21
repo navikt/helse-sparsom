@@ -1,16 +1,11 @@
-package no.nav.helse.sparsom
+package no.nav.helse.sparsom.job
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import db.migration.V3__Datalast
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.PreparedStatement
-import java.time.Duration
-import java.time.LocalDateTime
-import kotlin.math.ceil
-import kotlin.system.measureTimeMillis
 
 internal class HentAktivitetslogg(private val dispatcher: Dispatcher) {
 

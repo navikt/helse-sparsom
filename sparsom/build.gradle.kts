@@ -7,6 +7,7 @@ val commonsCodecVersion = "1.15"
 val rapidsAndRiversVersion = "2022072721371658950659.c1e8f7bf35c6"
 
 dependencies {
+    implementation(project(":dao"))
     implementation("org.flywaydb:flyway-core:$flywayCoreVersion")
     implementation("commons-codec:commons-codec:$commonsCodecVersion")
 

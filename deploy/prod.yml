@@ -19,13 +19,13 @@ spec:
   resources:
     limits:
       cpu: 2000m
-      memory: 4Gi
+      memory: 1Gi
     requests:
       cpu: 50m
       memory: 512Mi
   replicas:
-    min: 60
-    max: 60
+    min: 2
+    max: 12
     cpuThresholdPercentage: 70
   prometheus:
     enabled: true

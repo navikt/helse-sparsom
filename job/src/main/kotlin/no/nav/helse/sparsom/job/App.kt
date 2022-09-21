@@ -7,6 +7,7 @@ import com.zaxxer.hikari.HikariDataSource
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.time.Duration
+import kotlin.system.exitProcess
 
 internal val objectMapper = jacksonObjectMapper()
     .registerModule(JavaTimeModule())
@@ -34,7 +35,7 @@ fun main() {
 }
 
 private fun runApplication(connection: Connection) {
-    log.info("Har jeg dbtilgang?")
-    connection.createStatement().execute("SELECT 1;")
+    ImporterAktivitetslogg(Dispatcher("arbeidstabell_step2", connection))
+        .migrate(connection)
 }
 

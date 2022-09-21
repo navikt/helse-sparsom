@@ -3,6 +3,7 @@ val cloudSqlVersion = "1.6.0"
 val mainClass = "no.nav.helse.sparsom.job.AppKt"
 
 dependencies {
+    implementation(project(":dao"))
     implementation("com.google.cloud.sql:postgres-socket-factory:$cloudSqlVersion")
 }
 

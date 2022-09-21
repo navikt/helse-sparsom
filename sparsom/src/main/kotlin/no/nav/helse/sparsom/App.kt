@@ -23,10 +23,6 @@ private fun createApp(env: Map<String, String>): RapidsConnection {
         register(object : RapidsConnection.StatusListener {
             override fun onStartup(rapidsConnection: RapidsConnection) {
                 dataSourceBuilder.migrate()
-                val connection = dataSource.connection
-                ImporterAktivitetslogg(Dispatcher("arbeidstabell_step2", connection))
-                    .migrate(connection)
-                exitProcess(0)
             }
 
             override fun onShutdown(rapidsConnection: RapidsConnection) {

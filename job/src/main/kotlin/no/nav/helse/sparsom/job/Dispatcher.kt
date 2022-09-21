@@ -1,10 +1,9 @@
-package no.nav.helse.sparsom
+package no.nav.helse.sparsom.job
 
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.time.LocalDateTime
-import java.time.LocalTime
 
 internal class Dispatcher(
     private val table: String,

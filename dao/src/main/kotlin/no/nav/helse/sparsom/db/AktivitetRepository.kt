@@ -7,7 +7,7 @@ import no.nav.helse.sparsom.KontekstNavn
 import no.nav.helse.sparsom.KontekstVerdi
 import no.nav.helse.sparsom.Melding
 
-internal interface AktivitetRepository {
+interface AktivitetRepository {
     fun lagre(
         aktiviteter: List<Aktivitet>,
         meldinger: Collection<Melding>,

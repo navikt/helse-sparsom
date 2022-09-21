@@ -1,2 +1,2 @@
 rootProject.name = "sparsom"
-include("api", "job", "sparsom")
+include("api", "dao", "job", "sparsom")

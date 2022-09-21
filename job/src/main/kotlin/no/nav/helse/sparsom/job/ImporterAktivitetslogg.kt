@@ -1,11 +1,10 @@
-package no.nav.helse.sparsom
+package no.nav.helse.sparsom.job
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.nav.helse.sparsom.*
 import no.nav.helse.sparsom.db.AktivitetDao
-import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.PreparedStatement

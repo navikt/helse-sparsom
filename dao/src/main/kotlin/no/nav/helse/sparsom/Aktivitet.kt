@@ -1,17 +1,14 @@
 package no.nav.helse.sparsom
 
 import com.fasterxml.jackson.annotation.JsonAlias
-import no.nav.helse.sparsom.Kontekst.Companion.hash
 import no.nav.helse.sparsom.db.AktivitetRepository
-import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.LoggerFactory
 import java.sql.PreparedStatement
 import java.sql.Types
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.system.measureTimeMillis
 
-internal class Aktivitet(
+class Aktivitet(
     private val id: UUID,
     private val nivå: Nivå,
     private val melding: Melding,
@@ -43,30 +40,15 @@ internal class Aktivitet(
         return true
     }
 
-    internal companion object {
+    companion object {
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
-        internal fun List<Aktivitet>.lagre(aktivitetRepository: AktivitetRepository, personident: String, hendelseId: Long?) {
+        fun List<Aktivitet>.lagre(aktivitetRepository: AktivitetRepository, personident: String, hendelseId: Long?) {
             aktivitetRepository.lagre(this, emptyList(), emptyList(),  emptyList(), emptyList(), personident, hendelseId)
-        }
-    }
-
-    internal class AktivitetDTO(
-        private val nivå: Nivå,
-        private val melding: String,
-        private val tidsstempel: LocalDateTime,
-        private val hash: String,
-        private val kontekster: List<Kontekst.KontekstDTO>
-    ) {
-        private fun stringify(hendelseId: Long): List<String> {
-            return listOf(hendelseId.toString(), nivå.toString(), melding, tidsstempel.toString(), hash)
-        }
-        internal companion object {
-            fun List<AktivitetDTO>.stringify(hendelseId: Long) = flatMap { it.stringify(hendelseId) }
         }
     }
 }
 
-internal class Melding(private val melding: String) {
+class Melding(private val melding: String) {
     internal var id: Long? = null
         private set
 
@@ -85,7 +67,7 @@ internal class Melding(private val melding: String) {
     override fun hashCode() = melding.hashCode()
 }
 
-internal class KontekstType(private val type: String) {
+class KontekstType(private val type: String) {
     internal var id: Long? = null
         private set
 
@@ -103,7 +85,7 @@ internal class KontekstType(private val type: String) {
     override fun equals(other: Any?) = other is KontekstType && other.type == this.type
     override fun hashCode() = type.hashCode()
 }
-internal class KontekstNavn(private val navn: String) {
+class KontekstNavn(private val navn: String) {
     internal var id: Long? = null
         private set
 
@@ -122,7 +104,7 @@ internal class KontekstNavn(private val navn: String) {
     override fun hashCode() = navn.hashCode()
 }
 
-internal class KontekstVerdi(private val verdi: String) {
+class KontekstVerdi(private val verdi: String) {
     internal var id: Long? = null
         private set
 
@@ -141,7 +123,7 @@ internal class KontekstVerdi(private val verdi: String) {
     override fun hashCode() = verdi.hashCode()
 }
 
-internal class Kontekst(
+class Kontekst(
     @JsonAlias("konteksttype")
     private val type: KontekstType,
     @JsonAlias("kontekstmap")
@@ -152,34 +134,8 @@ internal class Kontekst(
         detaljer.map { (navn, verdi) ->
             arrayOf(aktivitetId, requireNotNull(type.id) { "mangler typeId" }, requireNotNull(navn.id) { "har ikke navnId" }, requireNotNull(verdi.id) { "har ikke verdiId" })
         }
-
-    internal companion object {
-        internal fun List<Kontekst>.hash(): String {
-            val kontekster = flatMap { kontekst ->
-                kontekst.detaljer.map { Triple(kontekst.type, it.key, it.value) }
-            }
-            return kontekster.joinToString("") { "${it.first}${it.second}${it.third}" }
-        }
-    }
-
-    internal data class KontekstDTO(
-        private val type: String,
-        private val identifikatornavn: String,
-        private val identifikator: String,
-        private val hash: String,
-        private val hendelseId: Long
-    ) {
-        private fun stringify(): List<String> {
-            return listOf(type, identifikatornavn, identifikator)
-        }
-
-        internal companion object {
-            fun List<KontekstDTO>.filtrerHarHash(hasher: List<String>) = filter { kontekst -> kontekst.hash in hasher.map { it.trimEnd() } }
-            fun Set<KontekstDTO>.stringify() = flatMap { it.stringify() }
-            fun Set<KontekstDTO>.stringifyForKobling() = flatMap { listOf(it.hash) + it.stringify() }
-        }
-    }
 }
+
 enum class Nivå {
     INFO,
     BEHOV,
