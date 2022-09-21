@@ -9,7 +9,7 @@ spec:
   image: {{image}}
   port: 8080
   strategy:
-    type: RollingUpdate
+    type: Recreate
   liveness:
     path: isalive
     initialDelay: 5
@@ -24,8 +24,8 @@ spec:
       cpu: 50m
       memory: 512Mi
   replicas:
-    min: 40
-    max: 40
+    min: 60
+    max: 60
     cpuThresholdPercentage: 70
   prometheus:
     enabled: true
