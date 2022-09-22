@@ -134,6 +134,7 @@ data class AktivitetDto(
 
 enum class NivåDto {
     INFO,
+    BEHOV,
     VARSEL,
     FUNKSJONELL_FEIL,
     LOGISK_FEIL;
