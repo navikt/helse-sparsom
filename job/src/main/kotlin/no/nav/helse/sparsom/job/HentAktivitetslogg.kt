@@ -9,7 +9,7 @@ import java.sql.PreparedStatement
 
 internal class HentAktivitetslogg(private val dispatcher: Dispatcher) {
 
-    fun migrate(connection: Connection, spleisConnection: Connection) = spleisConnection.use {
+    fun migrate(connection: Connection, spleisConnection: Connection) {
         connection.autoCommit = false
         spleisConnection.autoCommit = false
         try {

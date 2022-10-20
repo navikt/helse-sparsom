@@ -16,6 +16,7 @@ spec:
     enabled: true
   envFrom:
     - secret: google-sql-sparsom
+    - secret: google-sql-spleis-spleis-sparsom-e28cfed2
   gcp:
     permissions:
       - resource:
@@ -28,3 +29,7 @@ spec:
       value: "europe-north1"
     - name: DATABASE_INSTANCE
       value: sparsom
+    - name: DATABASE_SPARSOM_REGION
+      value: "europe-north1"
+    - name: DATABASE_SPARSOM_INSTANCE
+      value: "helse-spleis"

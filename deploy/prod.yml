@@ -45,7 +45,7 @@ spec:
             - name: sparsom-api
         flags:
           - name: max_connections
-            value: "100"
+            value: "200"
           - name: max_wal_size
             value: "510848"
           - name: work_mem
