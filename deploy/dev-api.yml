@@ -35,6 +35,7 @@ spec:
       claims:
         groups:
         - id: "f787f900-6697-440d-a086-d5bb56e26a9c"
+        - id: "5206a646-a99e-4cd5-90e4-758cf7948cc8" #flex
   accessPolicy:
     inbound:
       rules:
