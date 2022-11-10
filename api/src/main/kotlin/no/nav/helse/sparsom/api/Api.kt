@@ -13,31 +13,29 @@ import javax.sql.DataSource
 internal fun Application.api(dataSource: DataSource, authProviderName: String) {
     val dao = AktivitetDao(dataSource)
     routing {
-        get("/api/varsler") {
-            withContext(Dispatchers.IO) {
-                call.respond(mapOf(
-                    "varsler" to dao.hentVarsler()
-                ))
-            }
-        }
-        get("/api/aktiviteter") {
-            withContext(Dispatchers.IO) {
-                val kontekstNavn = call.queryParam("navn").firstNotNullOfOrNull(::alphaNumericalOnlyOrNull)
-                val kontekstVerdi = call.queryParam("verdi").firstNotNullOfOrNull(::alphaNumericalOnlyOrNull)
-                val ident = call.queryParam("ident").firstNotNullOfOrNull(::numericalOnlyOrNull)
-
-                val aktiviteter = when {
-                    kontekstNavn != null && kontekstVerdi != null -> dao.hentAktiviteterFor(kontekstNavn, kontekstVerdi)
-                    ident != null -> dao.hentAktiviteterFor(ident)
-                    else -> emptyList()
-                }
-
-                call.respond(mapOf("aktiviteter" to aktiviteter))
-            }
-        }
-
         authenticate(authProviderName) {
+            get("/api/varsler") {
+                withContext(Dispatchers.IO) {
+                    call.respond(mapOf(
+                        "varsler" to dao.hentVarsler()
+                    ))
+                }
+            }
+            get("/api/aktiviteter") {
+                withContext(Dispatchers.IO) {
+                    val kontekstNavn = call.queryParam("navn").firstNotNullOfOrNull(::alphaNumericalOnlyOrNull)
+                    val kontekstVerdi = call.queryParam("verdi").firstNotNullOfOrNull(::alphaNumericalOnlyOrNull)
+                    val ident = call.queryParam("ident").firstNotNullOfOrNull(::numericalOnlyOrNull)
 
+                    val aktiviteter = when {
+                        kontekstNavn != null && kontekstVerdi != null -> dao.hentAktiviteterFor(kontekstNavn, kontekstVerdi)
+                        ident != null -> dao.hentAktiviteterFor(ident)
+                        else -> emptyList()
+                    }
+
+                    call.respond(mapOf("aktiviteter" to aktiviteter))
+                }
+            }
         }
     }
 }
