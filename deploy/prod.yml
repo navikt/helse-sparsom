@@ -36,7 +36,7 @@ spec:
     sqlInstances:
       - type: POSTGRES_14
         diskAutoresize: true
-        tier: db-custom-96-638976
+        tier: db-custom-16-106496
         pointInTimeRecovery: true
         databases:
           - name: sparsom
@@ -46,24 +46,22 @@ spec:
         flags:
           - name: max_connections
             value: "200"
-          - name: max_wal_size
-            value: "510848"
           - name: work_mem
-            value: "15728640"
+            value: "15728640" # If this value is specified without units, it is taken as kilobytes
           - name: maintenance_work_mem
-            value: "268435456"
-          - name: effective_cache_size
-            value: "57252249"
+            value: "94371840" # If this value is specified without units, it is taken as kilobytes
+          - name: autovacuum_work_mem
+            value: "25165824" # If this value is specified without units, it is taken as kilobytes
           - name: random_page_cost
             value: "1.2"
           - name: max_worker_processes
-            value: "96"
+            value: "16"
           - name: max_parallel_workers_per_gather
             value: "4"
           - name: max_parallel_workers
-            value: "80"
+            value: "12"
           - name: max_parallel_maintenance_workers
-            value: "64"
+            value: "8"
   secureLogs:
     enabled: true
   env:
@@ -73,7 +71,3 @@ spec:
       value: tbd-sparsom-v1
     - name: KAFKA_RESET_POLICY
       value: earliest
-    - name: KAFKA_MAX_RECORDS
-      value: "10"
-    - name: KAFKA_MAX_POLL_INTERVAL_MS
-      value: "1200000"
