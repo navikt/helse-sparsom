@@ -21,6 +21,7 @@ jobs:
       image: ghcr.io/${{ github.repository }}/sparsom:${{ env.TAG }}
       image_api: ghcr.io/${{ github.repository }}/sparsom-api:${{ env.TAG }}
       image_job: ghcr.io/${{ github.repository }}/sparsom-job:${{ env.TAG }}
+      image_opprydding: ghcr.io/${{ github.repository }}/sparsom-opprydding:${{ env.TAG }}
 
   build:
     name: build docker image
@@ -41,12 +42,15 @@ jobs:
         run: docker build api --pull -f Dockerfile -t ${{ needs.set_version.outputs.image_api }}
       - name: build job docker image
         run: docker build job --pull -f Dockerfile -t ${{ needs.set_version.outputs.image_job }}
+      - name: build opprydding docker image
+        run: docker build opprydding --pull -f Dockerfile -t ${{ needs.set_version.outputs.image_opprydding }}
       - name: push docker image
         run: |
           docker login ghcr.io --username "$GITHUB_REPOSITORY" -p ${{ secrets.GITHUB_TOKEN }}
           docker push ${{ needs.set_version.outputs.image }}
           docker push ${{ needs.set_version.outputs.image_api }}
           docker push ${{ needs.set_version.outputs.image_job }}
+          docker push ${{ needs.set_version.outputs.image_opprydding }}
 
   snyk:
     name: check vulnerabilities
@@ -79,6 +83,12 @@ jobs:
           CLUSTER: dev-gcp
           RESOURCE: deploy/dev-api.yml
           IMAGE: ${{ needs.set_version.outputs.image_api }}
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: dev-gcp
+          RESOURCE: deploy/dev-opprydding.yml
+          IMAGE: ${{ needs.set_version.outputs.image_opprydding }}
 
   deployProd:
     name: deploy to prod

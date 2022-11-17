@@ -4,10 +4,10 @@ plugins {
 
 val kotliqueryVersion = "1.9.0"
 val hikariVersion = "5.0.1"
-val jacksonVersion = "2.13.4"
+val jacksonVersion = "2.14.0"
 val junitJupiterVersion = "5.9.0"
 val postgresqlVersion = "42.5.0"
-val logbackClassicVersion = "1.4.0"
+val logbackClassicVersion = "1.4.4"
 val logstashVersion = "7.2"
 val jvmTargetVersion = "17"
 
