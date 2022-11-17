@@ -43,6 +43,7 @@ spec:
             envVarPrefix: DATABASE
             users:
             - name: sparsom-api
+            - name: sparsom-opprydding
   secureLogs:
     enabled: true
   env:
