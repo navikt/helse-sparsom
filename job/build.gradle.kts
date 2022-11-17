@@ -1,4 +1,4 @@
-val cloudSqlVersion = "1.6.0"
+val cloudSqlVersion = "1.7.2"
 
 val mainClass = "no.nav.helse.sparsom.job.AppKt"
 

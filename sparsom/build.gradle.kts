@@ -3,13 +3,11 @@ val mainClass = "no.nav.helse.sparsom.AppKt"
 val flywayCoreVersion = "9.1.6"
 val testcontainersPostgresqlVersion = "1.17.3"
 val mockkVersion = "1.12.5"
-val commonsCodecVersion = "1.15"
-val rapidsAndRiversVersion = "2022072721371658950659.c1e8f7bf35c6"
+val rapidsAndRiversVersion = "2022111011111668075098.65e508dcde8b"
 
 dependencies {
     implementation(project(":dao"))
     implementation("org.flywaydb:flyway-core:$flywayCoreVersion")
-    implementation("commons-codec:commons-codec:$commonsCodecVersion")
 
     api("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
 
