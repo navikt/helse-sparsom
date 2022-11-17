@@ -1,6 +1,6 @@
 val cloudSqlVersion = "1.7.2"
 
-val mainClass = "no.nav.helse.sparsom.job.AppKt"
+val mainClass = "no.nav.helse.sparsom.opprydding.AppKt"
 val rapidsAndRiversVersion = "2022111011111668075098.65e508dcde8b"
 
 dependencies {
