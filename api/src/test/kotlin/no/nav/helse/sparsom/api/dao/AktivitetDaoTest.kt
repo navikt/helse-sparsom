@@ -13,7 +13,7 @@ internal class AktivitetDaoTest {
     private companion object {
         private val postgres = PostgreSQLContainer<Nothing>("postgres:14").apply {
             withReuse(true)
-            withLabel("app-navn", "spleis-api")
+            withLabel("app-navn", "sparsom-api")
             start()
         }
 

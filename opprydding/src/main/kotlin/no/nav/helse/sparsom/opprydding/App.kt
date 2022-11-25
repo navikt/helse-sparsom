@@ -78,7 +78,7 @@ private class Opprydding(rapidsConnection: RapidsConnection, private val dataSou
         @Language("PostgreSQL")
         private const val FINN_IDENT_ID_STMT = """select id from personident where ident=?;"""
         @Language("PostgreSQL")
-        private const val SLETT_IDENT_STMT = """delete from personident where ident = ?;"""
+        private const val SLETT_IDENT_STMT = """delete from personident where id = ?;"""
         @Language("PostgreSQL")
         private const val SLETT_HENDELSE_STMT = """delete from hendelse where personident_id = ?;"""
         @Language("PostgreSQL")
