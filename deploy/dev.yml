@@ -44,7 +44,7 @@ spec:
             users:
             - name: sparsom-api
             - name: sparsom-opprydding
-            - name: spesialist-migrering
+            - name: spesialist-migrering-sparsom
   secureLogs:
     enabled: true
   env:

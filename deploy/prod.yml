@@ -43,7 +43,7 @@ spec:
             envVarPrefix: DATABASE
             users:
             - name: sparsom-api
-            - name: spesialist-migrering
+            - name: spesialist-migrering-sparsom
         flags:
           - name: max_connections
             value: "200"
