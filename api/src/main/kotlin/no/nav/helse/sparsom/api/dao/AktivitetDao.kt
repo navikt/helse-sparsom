@@ -83,7 +83,7 @@ internal class AktivitetDao(private val dataSource: DataSource) {
             inner join kontekst_verdi kv on kv.id = ak.kontekst_verdi_id
             where a.id in (SELECT aktivitet_id FROM aktiviteter)
             group by a.id, a.tidsstempel, m.tekst
-            order by tidsstempel;
+            order by tidsstempel, a.id;
         """
 
         @Language("PostgreSQL")
@@ -119,7 +119,7 @@ internal class AktivitetDao(private val dataSource: DataSource) {
                 where p.ident = :ident
                 group by a.id, a.tidsstempel, m.tekst
             )
-            order by tidsstempel; 
+            order by tidsstempel, id; 
         """
     }
 }
