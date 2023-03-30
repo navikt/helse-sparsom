@@ -5,6 +5,7 @@ metadata:
   namespace: tbd
   labels:
     team: tbd
+    db: sparsom
 spec:
   image: {{image}}
   port: 8080
