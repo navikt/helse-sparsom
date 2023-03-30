@@ -13,7 +13,7 @@ spec:
   egress:
     - to:
         - ipBlock:
-            cidr: 35.228.15.0/32
+            cidr: 35.228.15.216/32
   podSelector:
     matchLabels:
       db: sparsom
