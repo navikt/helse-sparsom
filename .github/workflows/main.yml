@@ -106,5 +106,5 @@ jobs:
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: prod-gcp
-          RESOURCE: deploy/prod-api.yml,deploy/dev-db.yml
+          RESOURCE: deploy/prod-api.yml,deploy/prod-db.yml
           IMAGE: ${{ needs.set_version.outputs.image_api }}
