@@ -1,14 +1,14 @@
 plugins {
-    kotlin("jvm") version "1.7.0"
+    kotlin("jvm") version "1.9.10"
 }
 
 val kotliqueryVersion = "1.9.0"
 val hikariVersion = "5.0.1"
-val jacksonVersion = "2.14.0"
-val junitJupiterVersion = "5.9.0"
-val postgresqlVersion = "42.5.0"
-val logbackClassicVersion = "1.4.4"
-val logstashVersion = "7.2"
+val jacksonVersion = "2.15.2"
+val junitJupiterVersion = "5.10.0"
+val postgresqlVersion = "42.6.0"
+val logbackClassicVersion = "1.4.11"
+val logstashVersion = "7.4"
 val jvmTargetVersion = "17"
 
 allprojects {
@@ -52,7 +52,7 @@ allprojects {
         }
 
         withType<Wrapper> {
-            gradleVersion = "7.4.2"
+            gradleVersion = "8.3"
         }
 
     }

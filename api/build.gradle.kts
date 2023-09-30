@@ -1,10 +1,10 @@
-val micrometerRegistryPrometheusVersion = "1.9.0"
-val ktorVersion = "2.0.1"
+val micrometerRegistryPrometheusVersion = "1.11.4"
+val ktorVersion = "2.3.4"
 val wireMockVersion = "2.31.0"
 val cloudSqlVersion = "1.7.2"
 val awaitilityVersion = "4.1.1"
 val flywayCoreVersion = "9.1.6"
-val testcontainersPostgresqlVersion = "1.17.1"
+val testcontainersPostgresqlVersion = "1.19.0"
 val mockVersion = "1.12.4"
 
 val mainClass = "no.nav.helse.sparsom.api.AppKt"
@@ -40,9 +40,8 @@ tasks.named<Jar>("jar") {
 
     doLast {
         configurations.runtimeClasspath.get().forEach {
-            val file = File("$buildDir/libs/${it.name}")
-            if (!file.exists())
-                it.copyTo(file)
+            val file = File("${layout.buildDirectory.get()}/libs/${it.name}")
+            if (!file.exists()) it.copyTo(file)
         }
     }
 }

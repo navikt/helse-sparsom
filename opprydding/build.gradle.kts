@@ -1,7 +1,7 @@
 val cloudSqlVersion = "1.7.2"
 
 val mainClass = "no.nav.helse.sparsom.opprydding.AppKt"
-val rapidsAndRiversVersion = "2022111011111668075098.65e508dcde8b"
+val rapidsAndRiversVersion = "2023093008351696055717.ffdec6aede3d"
 
 dependencies {
     api("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
@@ -20,9 +20,8 @@ tasks.named<Jar>("jar") {
 
     doLast {
         configurations.runtimeClasspath.get().forEach {
-            val file = File("$buildDir/libs/${it.name}")
-            if (!file.exists())
-                it.copyTo(file)
+            val file = File("${layout.buildDirectory.get()}/libs/${it.name}")
+            if (!file.exists()) it.copyTo(file)
         }
     }
 }
