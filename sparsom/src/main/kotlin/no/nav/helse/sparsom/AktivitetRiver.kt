@@ -1,6 +1,7 @@
 package no.nav.helse.sparsom
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.jillesvangurp.ktsearch.Refresh
 import com.jillesvangurp.ktsearch.SearchClient
 import com.jillesvangurp.ktsearch.bulk
@@ -76,19 +77,46 @@ internal class AktivitetRiver(
             aktivitetDao.lagre(aktiviteter, meldinger.values, typer.values, navn.values, verdier.values, fødselsnummer, id)
             runBlocking {
                 openSearchClient?.bulk {
-                    packet["aktiviteter"].map { aktivitet ->
-                        index(
-                            source = aktivitet.toString(),
-                            index = opensearchIndexnavn
-                        )
+                    packet["aktiviteter"]
+                        .map { aktivitet ->
+                            OpenSearchAktivitet(
+                                id = aktivitet.path("id").asText(),
+                                fødselsnummer = aktivitet.path("fødselsnummer").asText(),
+                                nivå = aktivitet.path("nivå").asText(),
+                                melding = aktivitet.path("melding").asText(),
+                                tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText()),
+                                kontekster = aktivitet.path("kontekster").associate { kontekst ->
+                                    kontekst.path("konteksttype").asText() to kontekst.path("kontekstmap")
+                                        .fields()
+                                        .asSequence()
+                                        .associate { (key, value) -> key to value.asText() }
+                                }
+                            )
+                        }
+                        .map {
+                            index(
+                                id = it.id,
+                                source = objectMapper.writeValueAsString(it),
+                                index = opensearchIndexnavn
+                            )
+                        }
                     }
                 }
-            }
         }
         logger.info("lagrer aktiviteter fra hendelse {}. Tid brukt: ${tidBrukt}ms", keyValue("meldingsreferanseId", hendelseId))
     }
 
     private companion object {
+        private val objectMapper = jacksonObjectMapper()
         private val logger = LoggerFactory.getLogger(AktivitetRiver::class.java)
     }
 }
+
+data class OpenSearchAktivitet(
+    val id: String,
+    val fødselsnummer: String,
+    val nivå: String,
+    val melding: String,
+    val tidsstempel: LocalDateTime,
+    val kontekster: Map<String, Map<String, String>>
+)

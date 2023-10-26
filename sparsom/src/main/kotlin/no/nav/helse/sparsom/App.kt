@@ -34,13 +34,10 @@ private fun createApp(env: Map<String, String>): RapidsConnection {
                         }
                         mappings(dynamicEnabled = true) {
                             text("id")
+                            text("fødselsnummer")
                             text("nivå")
                             text("melding")
                             date("tidsstempel")
-                            nestedField("kontekster") {
-                                text("konteksttype")
-                                objField("kontekstmap")
-                            }
                         }
                     }
                 }
