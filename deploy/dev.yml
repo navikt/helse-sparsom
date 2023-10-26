@@ -34,6 +34,9 @@ spec:
     pool: nav-dev
   envFrom:
     - secret: google-sql-helse-spleis-spleis-sparsom-9544ddd9
+  openSearch:
+    access: readwrite
+    instance: sparsom
   gcp:
     sqlInstances:
       - type: POSTGRES_14
