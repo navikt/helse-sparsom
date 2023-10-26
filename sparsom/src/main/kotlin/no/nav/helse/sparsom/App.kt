@@ -9,9 +9,12 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.sparsom.db.AktivitetDao
 import no.nav.helse.sparsom.db.DataSourceBuilder
 import no.nav.helse.sparsom.db.HendelseDao
+import org.slf4j.LoggerFactory
+import java.lang.Exception
 import java.net.URI
 
 const val opensearchIndexnavn = "aktivitetslogg"
+private val log = LoggerFactory.getLogger("no.nav.helse.sparsom.App")
 
 fun main() {
     val app = createApp(System.getenv())
@@ -27,18 +30,22 @@ private fun createApp(env: Map<String, String>): RapidsConnection {
         register(object : RapidsConnection.StatusListener {
             override fun onStartup(rapidsConnection: RapidsConnection) {
                 runBlocking {
-                    openSearchClient?.createIndex(opensearchIndexnavn) {
-                        settings {
-                            replicas = 0
-                            shards = 3
+                    try {
+                        openSearchClient?.createIndex(opensearchIndexnavn) {
+                            settings {
+                                replicas = 0
+                                shards = 3
+                            }
+                            mappings(dynamicEnabled = true) {
+                                text("id")
+                                text("fødselsnummer")
+                                text("nivå")
+                                text("melding")
+                                date("tidsstempel")
+                            }
                         }
-                        mappings(dynamicEnabled = true) {
-                            text("id")
-                            text("fødselsnummer")
-                            text("nivå")
-                            text("melding")
-                            date("tidsstempel")
-                        }
+                    } catch (err: Exception) {
+                        log.error("Fikk feil ved createIndex: {}", err.message, err)
                     }
                 }
                 dataSourceBuilder.migrate()
