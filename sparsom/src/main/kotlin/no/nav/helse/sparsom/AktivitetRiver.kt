@@ -105,7 +105,7 @@ internal class AktivitetRiver(
                                 kontekster = kontekster.map { (konteksttype, detaljer) ->
                                     detaljer + mapOf("konteksttype" to konteksttype)
                                 },
-                                kontekster.fold(emptyMap()) { resultat, (_, detaljer) ->
+                                kontekstverdier = kontekster.fold(emptyMap()) { resultat, (_, detaljer) ->
                                     resultat + detaljer
                                 }
                             )
@@ -134,7 +134,7 @@ internal class AktivitetRiver(
     }
 }
 
-@JsonIgnoreProperties("kontekstverdier")
+@JsonIgnoreProperties("kontekstverdier", "detaljer")
 data class OpenSearchAktivitet(
     val id: String,
     val fødselsnummer: String,
@@ -142,6 +142,15 @@ data class OpenSearchAktivitet(
     val melding: String,
     val tidsstempel: LocalDateTime,
     val kontekster: List<Map<String, String>>,
-    @JsonAnyGetter
     val kontekstverdier: Map<String, String>
-)
+) {
+    @JsonAnyGetter
+    val detaljer = kontekstverdier.toMutableMap().apply {
+        remove("id")
+        remove("fødselsnummer")
+        remove("nivå")
+        remove("melding")
+        remove("tidsstempel")
+        remove("kontekster")
+    }
+}
