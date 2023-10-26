@@ -1,8 +1,6 @@
 package no.nav.helse.sparsom
 
-import com.jillesvangurp.ktsearch.KtorRestClient
-import com.jillesvangurp.ktsearch.SearchClient
-import com.jillesvangurp.ktsearch.createIndex
+import com.jillesvangurp.ktsearch.*
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
@@ -30,6 +28,13 @@ private fun createApp(env: Map<String, String>): RapidsConnection {
         register(object : RapidsConnection.StatusListener {
             override fun onStartup(rapidsConnection: RapidsConnection) {
                 runBlocking {
+                    try {
+                        openSearchClient?.getIndex(opensearchIndexnavn)?.also {
+                            log.info("innhold av getIndex: {}", it)
+                        }
+                    } catch (err: Exception) {
+                        log.error("Fikk feil ved getIndex: {}", err.message, err)
+                    }
                     try {
                         openSearchClient?.createIndex(opensearchIndexnavn) {
                             settings {
