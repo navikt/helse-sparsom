@@ -1,6 +1,8 @@
 package no.nav.helse.sparsom
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.jillesvangurp.ktsearch.Refresh
 import com.jillesvangurp.ktsearch.SearchClient
@@ -110,6 +112,8 @@ internal class AktivitetRiver(
 
     private companion object {
         private val objectMapper = jacksonObjectMapper()
+            .registerModule(JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
         private val logger = LoggerFactory.getLogger(AktivitetRiver::class.java)
     }
 }
