@@ -21,6 +21,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.*
+import kotlin.math.log
 import kotlin.system.measureTimeMillis
 
 internal class AktivitetRiver(
@@ -112,7 +113,9 @@ internal class AktivitetRiver(
                         .map {
                             index(
                                 id = it.id,
-                                source = objectMapper.writeValueAsString(it),
+                                source = objectMapper.writeValueAsString(it).also { json ->
+                                    sikkerlogg.info("skriver dokument til opensearch:\n$json")
+                                },
                                 index = opensearchIndexnavn
                             )
                         }
@@ -127,6 +130,7 @@ internal class AktivitetRiver(
             .registerModule(JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
         private val logger = LoggerFactory.getLogger(AktivitetRiver::class.java)
+        private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
     }
 }
 
