@@ -83,7 +83,7 @@ internal class AktivitetRiver(
                         .map { aktivitet ->
                             OpenSearchAktivitet(
                                 id = aktivitet.path("id").asText(),
-                                fødselsnummer = aktivitet.path("fødselsnummer").asText(),
+                                fødselsnummer = packet["fødselsnummer"].asText(),
                                 nivå = aktivitet.path("nivå").asText(),
                                 melding = aktivitet.path("melding").asText(),
                                 tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText()),
