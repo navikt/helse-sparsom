@@ -1,5 +1,9 @@
 package no.nav.helse.sparsom
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonUnwrapped
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -83,19 +87,25 @@ internal class AktivitetRiver(
                 openSearchClient?.bulk {
                     packet["aktiviteter"]
                         .map { aktivitet ->
+                            val kontekster = aktivitet.path("kontekster").map { kontekst ->
+                                val konteksttype = kontekst.path("konteksttype").asText()
+                                val detaljer = kontekst.path("kontekstmap")
+                                    .fields()
+                                    .asSequence()
+                                    .associate { (key, value) -> key to value.asText() }
+                                konteksttype to detaljer
+                            }
                             OpenSearchAktivitet(
                                 id = aktivitet.path("id").asText(),
                                 fødselsnummer = packet["fødselsnummer"].asText(),
                                 nivå = aktivitet.path("nivå").asText(),
                                 melding = aktivitet.path("melding").asText(),
                                 tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText()).atZone(ZoneId.systemDefault()),
-                                kontekster = aktivitet.path("kontekster").map { kontekst ->
-                                    val konteksttype = kontekst.path("konteksttype").asText()
-                                    val detaljer = kontekst.path("kontekstmap")
-                                        .fields()
-                                        .asSequence()
-                                        .associate { (key, value) -> key to value.asText() }
+                                kontekster = kontekster.map { (konteksttype, detaljer) ->
                                     detaljer + mapOf("konteksttype" to konteksttype)
+                                },
+                                kontekster.fold(emptyMap()) { resultat, (_, detaljer) ->
+                                    resultat + detaljer
                                 }
                             )
                         }
@@ -120,11 +130,14 @@ internal class AktivitetRiver(
     }
 }
 
+@JsonIgnoreProperties("kontekstverdier")
 data class OpenSearchAktivitet(
     val id: String,
     val fødselsnummer: String,
     val nivå: String,
     val melding: String,
     val tidsstempel: ZonedDateTime,
-    val kontekster: List<Map<String, String>>
+    val kontekster: List<Map<String, String>>,
+    @JsonAnyGetter
+    val kontekstverdier: Map<String, String>
 )
