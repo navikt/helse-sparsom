@@ -42,6 +42,9 @@ private fun createApp(env: Map<String, String>): RapidsConnection {
                                 text("nivå")
                                 text("melding")
                                 date("tidsstempel")
+                                nestedField("kontekster") {
+
+                                }
                             }
                         }
                     } catch (err: Exception) {

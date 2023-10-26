@@ -85,11 +85,13 @@ internal class AktivitetRiver(
                                 nivå = aktivitet.path("nivå").asText(),
                                 melding = aktivitet.path("melding").asText(),
                                 tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText()),
-                                kontekster = aktivitet.path("kontekster").associate { kontekst ->
-                                    kontekst.path("konteksttype").asText() to kontekst.path("kontekstmap")
+                                kontekster = aktivitet.path("kontekster").map { kontekst ->
+                                    val konteksttype = kontekst.path("konteksttype").asText()
+                                    val detaljer = kontekst.path("kontekstmap")
                                         .fields()
                                         .asSequence()
                                         .associate { (key, value) -> key to value.asText() }
+                                    detaljer + mapOf("konteksttype" to konteksttype)
                                 }
                             )
                         }
@@ -118,5 +120,5 @@ data class OpenSearchAktivitet(
     val nivå: String,
     val melding: String,
     val tidsstempel: LocalDateTime,
-    val kontekster: Map<String, Map<String, String>>
+    val kontekster: List<Map<String, String>>
 )
