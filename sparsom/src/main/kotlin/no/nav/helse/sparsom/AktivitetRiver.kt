@@ -14,6 +14,8 @@ import no.nav.helse.sparsom.db.AktivitetDao
 import no.nav.helse.sparsom.db.HendelseRepository
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.*
 import kotlin.system.measureTimeMillis
 
@@ -86,7 +88,7 @@ internal class AktivitetRiver(
                                 fødselsnummer = packet["fødselsnummer"].asText(),
                                 nivå = aktivitet.path("nivå").asText(),
                                 melding = aktivitet.path("melding").asText(),
-                                tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText()),
+                                tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText()).atZone(ZoneId.systemDefault()),
                                 kontekster = aktivitet.path("kontekster").map { kontekst ->
                                     val konteksttype = kontekst.path("konteksttype").asText()
                                     val detaljer = kontekst.path("kontekstmap")
@@ -123,6 +125,6 @@ data class OpenSearchAktivitet(
     val fødselsnummer: String,
     val nivå: String,
     val melding: String,
-    val tidsstempel: LocalDateTime,
+    val tidsstempel: ZonedDateTime,
     val kontekster: List<Map<String, String>>
 )
