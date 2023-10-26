@@ -101,7 +101,7 @@ internal class AktivitetRiver(
                                 fødselsnummer = packet["fødselsnummer"].asText(),
                                 nivå = aktivitet.path("nivå").asText(),
                                 melding = aktivitet.path("melding").asText(),
-                                tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText()),
+                                tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText()).atZone(ZoneId.systemDefault()),
                                 kontekster = kontekster.map { (konteksttype, detaljer) ->
                                     detaljer + mapOf("konteksttype" to konteksttype)
                                 },
@@ -140,7 +140,7 @@ data class OpenSearchAktivitet(
     val fødselsnummer: String,
     val nivå: String,
     val melding: String,
-    val tidsstempel: LocalDateTime,
+    val tidsstempel: ZonedDateTime,
     val kontekster: List<Map<String, String>>,
     val kontekstverdier: Map<String, String>
 ) {
