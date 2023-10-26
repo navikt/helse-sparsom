@@ -1,6 +1,10 @@
 package no.nav.helse.sparsom
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.jillesvangurp.ktsearch.Refresh
+import com.jillesvangurp.ktsearch.SearchClient
+import com.jillesvangurp.ktsearch.bulk
+import kotlinx.coroutines.runBlocking
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.*
 import no.nav.helse.sparsom.db.AktivitetDao
@@ -13,7 +17,8 @@ import kotlin.system.measureTimeMillis
 internal class AktivitetRiver(
     rapidsConnection: RapidsConnection,
     private val hendelseRepository: HendelseRepository,
-    private val aktivitetDao: AktivitetDao
+    private val aktivitetDao: AktivitetDao,
+    private val openSearchClient: SearchClient? = null
 ): River.PacketListener {
     init {
         River(rapidsConnection).apply {
@@ -69,6 +74,16 @@ internal class AktivitetRiver(
                     )
                 }
             aktivitetDao.lagre(aktiviteter, meldinger.values, typer.values, navn.values, verdier.values, fødselsnummer, id)
+            runBlocking {
+                openSearchClient?.bulk {
+                    packet["aktiviteter"].map { aktivitet ->
+                        index(
+                            source = aktivitet.toString(),
+                            index = opensearchIndexnavn
+                        )
+                    }
+                }
+            }
         }
         logger.info("lagrer aktiviteter fra hendelse {}. Tid brukt: ${tidBrukt}ms", keyValue("meldingsreferanseId", hendelseId))
     }
