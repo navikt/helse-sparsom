@@ -18,6 +18,8 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.*
 import javax.sql.DataSource
+import kotlin.system.measureTimeMillis
+import kotlin.time.measureTime
 
 internal class ImporterOpenSearch(private val dispatcher: Dispatcher) {
 
@@ -42,18 +44,25 @@ internal class ImporterOpenSearch(private val dispatcher: Dispatcher) {
     }
 
     private fun migrerAktivitetslogg(openSearchClient: SearchClient, dao: Dao, ident: Long) {
+        val t1 = System.currentTimeMillis()
         val aktiveter = dao.hentAktiviteterFor(ident.toString().padStart(11, '0'))
+        val t2 = System.currentTimeMillis()
+        log.info("brukte ${t2 - t1} ms på å hente aktivietslogg fra psql")
 
-        runBlocking {
-            openSearchClient.bulk(failOnFirstError = true) {
-                aktiveter.map {
-                    index(
-                        id = it.id,
-                        source = objectMapper.writeValueAsString(it),
-                        index = "aktivitetslogg"
-                    )
+        measureTimeMillis {
+            runBlocking {
+                openSearchClient.bulk(bulkSize = 500, failOnFirstError = true) {
+                    aktiveter.map {
+                        index(
+                            id = it.id,
+                            source = objectMapper.writeValueAsString(it),
+                            index = "aktivitetslogg"
+                        )
+                    }
                 }
             }
+        }.also {
+            log.info("brukte $it ms på å sende til opensearch")
         }
     }
 
