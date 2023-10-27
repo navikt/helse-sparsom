@@ -25,7 +25,7 @@ fun main() {
         password = requireNotNull(env["DATABASE_PASSWORD"]) { "passord må settes" }
         initializationFailTimeout = Duration.ofMinutes(1).toMillis()
         connectionTimeout = Duration.ofMinutes(1).toMillis()
-        maximumPoolSize = 1
+        maximumPoolSize = 2
     }
 
     val openSearchClient = openSearchClient(env)
