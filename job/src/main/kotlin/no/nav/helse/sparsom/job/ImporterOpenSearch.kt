@@ -51,7 +51,7 @@ internal class ImporterOpenSearch(private val dispatcher: Dispatcher) {
 
         measureTimeMillis {
             runBlocking {
-                openSearchClient.bulk(bulkSize = 500, failOnFirstError = true) {
+                openSearchClient.bulk(bulkSize = 1000, failOnFirstError = true) {
                     aktiveter.map {
                         index(
                             id = it.id,
