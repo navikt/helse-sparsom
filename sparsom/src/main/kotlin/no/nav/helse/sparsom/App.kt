@@ -19,7 +19,7 @@ private val indexConfig = mapOf(
     ),
     "prod-gcp" to mapOf(
         "replicas" to 1,
-        "shards" to 100
+        "shards" to 50
     )
 )
 
