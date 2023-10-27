@@ -3,6 +3,7 @@ kind: Naisjob
 metadata:
   labels:
     team: tbd
+    db: sparsom
   name: sparsom-job
   namespace: tbd
 spec:
@@ -17,6 +18,9 @@ spec:
   envFrom:
     - secret: google-sql-sparsom
     - secret: google-sql-spleis-spleis-sparsom-e28cfed2
+  openSearch:
+    access: readwrite
+    instance: sparsom
   gcp:
     permissions:
       - resource:
