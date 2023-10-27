@@ -32,6 +32,9 @@ spec:
     path: /metrics
   kafka:
     pool: nav-prod
+  openSearch:
+    access: readwrite
+    instance: sparsom
   gcp:
     sqlInstances:
       - type: POSTGRES_14
