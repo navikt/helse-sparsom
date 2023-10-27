@@ -2,26 +2,20 @@ package no.nav.helse.sparsom.job
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.jillesvangurp.ktsearch.SearchClient
 import com.jillesvangurp.ktsearch.bulk
-import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.runBlocking
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.sparsom.*
-import no.nav.helse.sparsom.db.AktivitetDao
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
-import java.sql.Connection
-import java.sql.PreparedStatement
-import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 import javax.sql.DataSource
 
@@ -84,7 +78,9 @@ internal class ImporterOpenSearch(private val dispatcher: Dispatcher) {
 
     private companion object {
         private val log = LoggerFactory.getLogger(ImporterOpenSearch::class.java)
-        private val objectMapper = jacksonObjectMapper().registerModule(JavaTimeModule())
+        private val objectMapper = jacksonObjectMapper()
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .registerModule(JavaTimeModule())
     }
 
     private class Dao(private val dataSource: DataSource) {
