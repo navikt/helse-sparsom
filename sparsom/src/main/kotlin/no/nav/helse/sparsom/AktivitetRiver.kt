@@ -131,7 +131,8 @@ internal class AktivitetRiver(
                     },
                     kontekstverdier = kontekster.fold(emptyMap()) { resultat, (_, detaljer) ->
                         resultat + detaljer
-                    }
+                    },
+                    varselkode = aktivitet.path("varselkode").takeIf(JsonNode::isTextual)?.asText()
                 )
             }
     }
@@ -153,7 +154,8 @@ data class OpenSearchAktivitet(
     val melding: String,
     val tidsstempel: ZonedDateTime,
     val kontekster: List<Map<String, String>>,
-    val kontekstverdier: Map<String, String>
+    val kontekstverdier: Map<String, String>,
+    val varselkode: String?
 ) {
     @JsonAnyGetter
     val detaljer = kontekstverdier.toMutableMap().apply {
