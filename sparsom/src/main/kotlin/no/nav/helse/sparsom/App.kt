@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 import java.lang.Exception
 import java.net.URI
 
-const val opensearchIndexnavn = "aktivitetslogg_v2"
+const val opensearchIndexnavn = "aktivitetslogg_v1"
 
 private val log = LoggerFactory.getLogger("no.nav.helse.sparsom.App")
 
