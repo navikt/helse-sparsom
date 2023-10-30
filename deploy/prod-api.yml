@@ -5,7 +5,6 @@ metadata:
   namespace: tbd
   labels:
     team: tbd
-    db: sparsom
 spec:
   image: {{image}}
   port: 8080
@@ -17,7 +16,6 @@ spec:
     initialDelay: 1
   resources:
     limits:
-      cpu: 500m
       memory: 1024Mi
     requests:
       cpu: 50m
@@ -43,18 +41,8 @@ spec:
       - application: spanner
         namespace: tbd
         cluster: prod-gcp
-  envFrom:
-    - secret: google-sql-sparsom-sparsom-sparsom-api-9af8353e
-  gcp:
-    permissions:
-      - resource:
-          apiVersion: resourcemanager.cnrm.cloud.google.com/v1beta1
-          kind: Project
-        role: roles/cloudsql.client
+  openSearch:
+    access: read
+    instance: sparsom
   secureLogs:
     enabled: true
-  env:
-    - name: DATABASE_SPARSOM_API_REGION
-      value: "europe-north1"
-    - name: DATABASE_SPARSOM_API_INSTANCE
-      value: "sparsom"

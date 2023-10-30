@@ -45,7 +45,6 @@ internal class AktivitetDao(private val client: SearchClient) {
 
     private companion object {
         private const val aktivitetsloggIndexName = "aktivitetslogg"
-
     }
 }
 
