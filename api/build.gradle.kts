@@ -10,7 +10,6 @@ val mockVersion = "1.12.4"
 val mainClass = "no.nav.helse.sparsom.api.AppKt"
 
 dependencies {
-    implementation("com.google.cloud.sql:postgres-socket-factory:$cloudSqlVersion")
     implementation("io.micrometer:micrometer-registry-prometheus:$micrometerRegistryPrometheusVersion")
 
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
@@ -20,11 +19,6 @@ dependencies {
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion") {
         exclude(group = "junit")
-    }
-
-    testImplementation("org.flywaydb:flyway-core:$flywayCoreVersion")
-    testImplementation("org.testcontainers:postgresql:$testcontainersPostgresqlVersion") {
-        exclude("com.fasterxml.jackson.core")
     }
 }
 

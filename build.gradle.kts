@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version "1.9.10"
 }
 
+val opensearchClientVersion = "2.1.4"
 val kotliqueryVersion = "1.9.0"
 val hikariVersion = "5.0.1"
 val jacksonVersion = "2.15.2"
@@ -20,9 +21,15 @@ allprojects {
     repositories {
         mavenCentral()
         maven("https://jitpack.io")
+        maven("https://maven.tryformation.com/releases") {
+            content {
+                includeGroup("com.jillesvangurp")
+            }
+        }
     }
 
     dependencies {
+        implementation("com.jillesvangurp:search-client:$opensearchClientVersion")
         implementation("org.postgresql:postgresql:$postgresqlVersion")
         implementation("com.github.seratch:kotliquery:$kotliqueryVersion")
         implementation("ch.qos.logback:logback-classic:$logbackClassicVersion")

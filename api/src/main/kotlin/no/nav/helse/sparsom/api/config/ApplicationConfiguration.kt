@@ -4,11 +4,13 @@ import com.auth0.jwk.JwkProvider
 import com.auth0.jwk.JwkProviderBuilder
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.ktor.server.auth.jwt.JWTAuthenticationProvider
-import io.ktor.server.auth.jwt.JWTPrincipal
+import com.jillesvangurp.ktsearch.KtorRestClient
+import com.jillesvangurp.ktsearch.SearchClient
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.engine.*
 import java.io.InputStream
 import java.net.HttpURLConnection
+import java.net.URI
 import java.net.URL
 
 internal class ApplicationConfiguration(env: Map<String, String> = System.getenv()) {
@@ -21,15 +23,19 @@ internal class ApplicationConfiguration(env: Map<String, String> = System.getenv
         configurationUrl = env.getValue("AZURE_APP_WELL_KNOWN_URL")
     )
 
-    // Håndter on-prem og gcp database tilkobling forskjellig
-    internal val dataSourceConfiguration = DataSourceConfiguration(
-        jdbcUrl = env["DATABASE_JDBC_URL"],
-        gcpProjectId = env["GCP_TEAM_PROJECT_ID"],
-        databaseRegion = env["DATABASE_SPARSOM_API_REGION"],
-        databaseInstance = env["DATABASE_SPARSOM_API_INSTANCE"],
-        databaseUsername = env["DATABASE_SPARSOM_API_USERNAME"],
-        databasePassword = env["DATABASE_SPARSOM_API_PASSWORD"],
-        databaseName = env["DATABASE_SPARSOM_API_DATABASE"]
+    internal val searchClient by lazy { openSearchClient(env) }
+}
+
+private fun openSearchClient(env: Map<String, String>): SearchClient {
+    val uri = URI(env.getValue("OPEN_SEARCH_URI"))
+    return SearchClient(
+        KtorRestClient(
+            host = uri.host,
+            https = uri.scheme.lowercase() == "https",
+            port = uri.port,
+            user = env.getValue("OPEN_SEARCH_USERNAME"),
+            password = env.getValue("OPEN_SEARCH_PASSWORD")
+        )
     )
 }
 

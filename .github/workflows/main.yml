@@ -91,9 +91,9 @@ jobs:
           CLUSTER: prod-gcp
           RESOURCE: deploy/prod.yml,deploy/prod-db.yml
           IMAGE: ${{ needs.set_version.outputs.image }}
-      - uses: nais/deploy/actions/deploy@v1
-        env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
-          CLUSTER: prod-gcp
-          RESOURCE: deploy/prod-api.yml,deploy/prod-db.yml
-          IMAGE: ${{ needs.set_version.outputs.image_api }}
+#      - uses: nais/deploy/actions/deploy@v1
+#        env:
+#          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+#          CLUSTER: prod-gcp
+#          RESOURCE: deploy/prod-api.yml,deploy/prod-db.yml
+#          IMAGE: ${{ needs.set_version.outputs.image_api }}

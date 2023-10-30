@@ -5,10 +5,10 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.jillesvangurp.ktsearch.SearchClient
 import io.ktor.http.*
 import io.ktor.serialization.jackson.JacksonConverter
 import io.ktor.server.application.install
-import io.ktor.server.auth.*
 import io.ktor.server.engine.applicationEngineEnvironment
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -20,7 +20,6 @@ import io.ktor.server.request.path
 import java.util.UUID
 import no.nav.helse.sparsom.api.config.ApplicationConfiguration
 import no.nav.helse.sparsom.api.config.AzureAdAppConfig
-import no.nav.helse.sparsom.api.config.DataSourceConfiguration
 import no.nav.helse.sparsom.api.config.KtorConfig
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
@@ -37,11 +36,11 @@ private val httpTraceLog = LoggerFactory.getLogger("tjenestekall")
 
 fun main() {
     val config = ApplicationConfiguration()
-    val app = createApp(config.ktorConfig, config.azureConfig, config.dataSourceConfiguration)
+    val app = createApp(config.ktorConfig, config.azureConfig, config.searchClient)
     app.start(wait = true)
 }
 
-internal fun createApp(ktorConfig: KtorConfig, azureConfig: AzureAdAppConfig, dataSourceConfiguration: DataSourceConfiguration) =
+internal fun createApp(ktorConfig: KtorConfig, azureConfig: AzureAdAppConfig, searchClient: SearchClient) =
     embeddedServer(
         factory = Netty,
         environment = applicationEngineEnvironment {
@@ -64,7 +63,7 @@ internal fun createApp(ktorConfig: KtorConfig, azureConfig: AzureAdAppConfig, da
                 requestResponseTracing(httpTraceLog)
                 nais()
                 azureAdAppAuthentication(azureConfig)
-                api(dataSourceConfiguration.getDataSource(), API_SERVICE)
+                api(searchClient, API_SERVICE)
             }
         },
         configure = {
