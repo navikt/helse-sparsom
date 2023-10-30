@@ -11,17 +11,7 @@ import org.slf4j.LoggerFactory
 import java.lang.Exception
 import java.net.URI
 
-const val opensearchIndexnavn = "aktivitetslogg"
-private val indexConfig = mapOf(
-    "dev-gcp" to mapOf(
-        "replicas" to 0,
-        "shards" to 3
-    ),
-    "prod-gcp" to mapOf(
-        "replicas" to 1,
-        "shards" to 50
-    )
-)
+const val opensearchIndexnavn = "aktivitetslogg_v2"
 
 private val log = LoggerFactory.getLogger("no.nav.helse.sparsom.App")
 
@@ -38,7 +28,6 @@ private fun createApp(env: Map<String, String>): RapidsConnection {
         AktivitetRiver(this, HendelseDao { dataSource }, AktivitetDao(dataSource), openSearchClient)
         register(object : RapidsConnection.StatusListener {
             override fun onStartup(rapidsConnection: RapidsConnection) {
-                ensureOpenSearchIndexExists(openSearchClient, env["NAIS_CLUSTER_NAME"])
                 dataSourceBuilder.migrate()
             }
 
@@ -46,40 +35,6 @@ private fun createApp(env: Map<String, String>): RapidsConnection {
                 dataSource.close()
             }
         })
-    }
-}
-
-private fun ensureOpenSearchIndexExists(openSearchClient: SearchClient?, clusterName: String?) {
-    val configuration = indexConfig[clusterName] ?: return
-
-    runBlocking {
-        try {
-            openSearchClient?.getIndex(opensearchIndexnavn)?.also {
-                log.info("innhold av getIndex: {}", it)
-            }
-        } catch (err: Exception) {
-            log.error("Fikk feil ved getIndex: {}", err.message, err)
-        }
-        try {
-            openSearchClient?.createIndex(opensearchIndexnavn) {
-                settings {
-                    replicas = configuration.getValue("replicas")
-                    shards = configuration.getValue("shards")
-                }
-                mappings(dynamicEnabled = true) {
-                    text("id")
-                    text("fødselsnummer")
-                    text("nivå")
-                    text("melding")
-                    date("tidsstempel")
-                    nestedField("kontekster") {
-
-                    }
-                }
-            }
-        } catch (err: Exception) {
-            log.error("Fikk feil ved createIndex: {}", err.message, err)
-        }
     }
 }
 
