@@ -17,6 +17,7 @@ import no.nav.helse.rapids_rivers.*
 import no.nav.helse.sparsom.db.AktivitetDao
 import no.nav.helse.sparsom.db.HendelseRepository
 import org.slf4j.LoggerFactory
+import java.lang.Exception
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -85,44 +86,54 @@ internal class AktivitetRiver(
                 }
             aktivitetDao.lagre(aktiviteter, meldinger.values, typer.values, navn.values, verdier.values, fødselsnummer, id)
             runBlocking {
-                openSearchClient?.bulk {
-                    packet["aktiviteter"]
-                        .map { aktivitet ->
-                            val kontekster = aktivitet.path("kontekster").map { kontekst ->
-                                val konteksttype = kontekst.path("konteksttype").asText()
-                                val detaljer = kontekst.path("kontekstmap")
-                                    .fields()
-                                    .asSequence()
-                                    .associate { (key, value) -> key to value.asText() }
-                                konteksttype to detaljer
+                try {
+                    openSearchClient?.bulk {
+                        tilOpenSearchAktiviteter(packet)
+                            .map {
+                                index(
+                                    id = it.id,
+                                    source = objectMapper.writeValueAsString(it).also { json ->
+                                        sikkerlogg.info("skriver dokument til opensearch:\n$json")
+                                    },
+                                    index = opensearchIndexnavn
+                                )
                             }
-                            OpenSearchAktivitet(
-                                id = aktivitet.path("id").asText(),
-                                fødselsnummer = packet["fødselsnummer"].asText(),
-                                nivå = aktivitet.path("nivå").asText(),
-                                melding = aktivitet.path("melding").asText(),
-                                tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText()).atZone(ZoneId.systemDefault()),
-                                kontekster = kontekster.map { (konteksttype, detaljer) ->
-                                    detaljer + mapOf("konteksttype" to konteksttype)
-                                },
-                                kontekstverdier = kontekster.fold(emptyMap()) { resultat, (_, detaljer) ->
-                                    resultat + detaljer
-                                }
-                            )
-                        }
-                        .map {
-                            index(
-                                id = it.id,
-                                source = objectMapper.writeValueAsString(it).also { json ->
-                                    sikkerlogg.info("skriver dokument til opensearch:\n$json")
-                                },
-                                index = opensearchIndexnavn
-                            )
-                        }
                     }
+                } catch (err: Exception) {
+                    sikkerlogg.error("kan ikke lagre til opensearch: {}", err.message, err)
+                    logger.error("kan ikke lagre til opensearch: {}", err.message, err)
+                    throw err
                 }
+            }
         }
         logger.info("lagrer aktiviteter fra hendelse {}. Tid brukt: ${tidBrukt}ms", keyValue("meldingsreferanseId", hendelseId))
+    }
+
+    private fun tilOpenSearchAktiviteter(packet: JsonMessage): List<OpenSearchAktivitet> {
+        return packet["aktiviteter"]
+            .map { aktivitet ->
+                val kontekster = aktivitet.path("kontekster").map { kontekst ->
+                    val konteksttype = kontekst.path("konteksttype").asText()
+                    val detaljer = kontekst.path("kontekstmap")
+                        .fields()
+                        .asSequence()
+                        .associate { (key, value) -> key to value.asText() }
+                    konteksttype to detaljer
+                }
+                OpenSearchAktivitet(
+                    id = aktivitet.path("id").asText(),
+                    fødselsnummer = packet["fødselsnummer"].asText(),
+                    nivå = aktivitet.path("nivå").asText(),
+                    melding = aktivitet.path("melding").asText(),
+                    tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText()).atZone(ZoneId.systemDefault()),
+                    kontekster = kontekster.map { (konteksttype, detaljer) ->
+                        detaljer + mapOf("konteksttype" to konteksttype)
+                    },
+                    kontekstverdier = kontekster.fold(emptyMap()) { resultat, (_, detaljer) ->
+                        resultat + detaljer
+                    }
+                )
+            }
     }
 
     private companion object {
