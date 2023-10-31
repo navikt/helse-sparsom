@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.jillesvangurp.ktsearch.SearchClient
 import com.jillesvangurp.ktsearch.bulk
+import com.jillesvangurp.ktsearch.bulkSession
 import kotlinx.coroutines.runBlocking
 import kotliquery.Row
 import kotliquery.queryOf
@@ -22,6 +23,8 @@ import kotlin.system.measureTimeMillis
 import kotlin.time.measureTime
 
 internal class ImporterOpenSearch(private val dispatcher: Dispatcher) {
+
+    private val varselmapper = Varselkodemapper()
 
     fun migrate(openSearchClient: SearchClient, dataSource: DataSource) {
         utførMigrering(openSearchClient, Dao(dataSource))
@@ -46,20 +49,24 @@ internal class ImporterOpenSearch(private val dispatcher: Dispatcher) {
     private fun migrerAktivitetslogg(openSearchClient: SearchClient, dao: Dao, ident: Long) {
         val t1 = System.currentTimeMillis()
         val aktiveter = dao.hentAktiviteterFor(ident.toString().padStart(11, '0'))
+            .filter { it.nivå in setOf("VARSEL", "FUNKSJONELL_FEIL") }
+            .mapNotNull { aktivitet -> varselmapper.map(aktivitet.melding)?.let { it to aktivitet } }
         val t2 = System.currentTimeMillis()
         log.info("brukte ${t2 - t1} ms på å hente aktivietslogg fra psql")
 
         measureTimeMillis {
             runBlocking {
-                openSearchClient.bulk(bulkSize = 1000, failOnFirstError = true) {
-                    aktiveter.map {
-                        index(
-                            id = it.id,
-                            source = objectMapper.writeValueAsString(it),
-                            index = "aktivitetslogg"
-                        )
-                    }
+                val bulkSession = openSearchClient.bulkSession(bulkSize = 1000, failOnFirstError = true)
+                aktiveter.forEach { (varselkode, aktivitet) ->
+                    @Language("JSON")
+                    val doc = """{ "varselkode": "${varselkode.name}" }"""
+                    bulkSession.update(
+                        id = aktivitet.id,
+                        doc = doc,
+                        index = "aktivitetslogg"
+                    )
                 }
+                bulkSession.flush()
             }
         }.also {
             log.info("brukte $it ms på å sende til opensearch")
@@ -69,23 +76,9 @@ internal class ImporterOpenSearch(private val dispatcher: Dispatcher) {
     @JsonIgnoreProperties("kontekstverdier", "detaljer")
     data class OpenSearchAktivitet(
         val id: String,
-        val fødselsnummer: String,
         val nivå: String,
-        val melding: String,
-        val tidsstempel: ZonedDateTime,
-        val kontekster: List<Map<String, String>>,
-        val kontekstverdier: Map<String, String>
-    ) {
-        @JsonAnyGetter
-        val detaljer = kontekstverdier.toMutableMap().apply {
-            remove("id")
-            remove("fødselsnummer")
-            remove("nivå")
-            remove("melding")
-            remove("tidsstempel")
-            remove("kontekster")
-        }
-    }
+        val melding: String
+    )
 
     private companion object {
         private val log = LoggerFactory.getLogger(ImporterOpenSearch::class.java)
@@ -100,30 +93,10 @@ internal class ImporterOpenSearch(private val dispatcher: Dispatcher) {
         }
 
         private fun mapRow(row: Row, ident: String): OpenSearchAktivitet {
-            val kontekster = row.string("kontekster")
-                .split(ROW_SEPARATOR)
-                .map {
-                    val verdier = it.split(VALUE_SEPARATOR)
-                    Triple(verdier[0], verdier[1], verdier[2])
-                }
-                .groupBy(Triple<String, *, *>::first)
-                .map { (konteksttype, detaljer) ->
-                    konteksttype to detaljer.associate { kontekstverdi ->
-                        kontekstverdi.second to kontekstverdi.third
-                    }
-                }
             return OpenSearchAktivitet(
                 id = row.string("aktivitet_uuid"),
-                fødselsnummer = ident,
-                tidsstempel = row.localDateTime("tidsstempel").atZone(ZoneId.systemDefault()),
                 nivå = row.string("level"),
-                melding = row.string("tekst"),
-                kontekster = kontekster.map { (konteksttype, detaljer) ->
-                    detaljer + mapOf("konteksttype" to konteksttype)
-                },
-                kontekstverdier = kontekster.fold(emptyMap()) { resultat, (_, detaljer) ->
-                    resultat + detaljer
-                }
+                melding = row.string("tekst")
             )
         }
         private companion object {
@@ -140,7 +113,7 @@ internal class ImporterOpenSearch(private val dispatcher: Dispatcher) {
                 where kv.verdi = :ident and k.navn='aktørId'
             )
             (
-                select a.id, a.level, a.aktivitet_uuid, a.tidsstempel, m.tekst, string_agg(concat_ws('$VALUE_SEPARATOR', kt.type, kn.navn, kv.verdi), '$ROW_SEPARATOR') as kontekster 
+                select a.id, a.level, a.aktivitet_uuid, a.tidsstempel, m.tekst 
                 from aktivitet a
                 inner join melding m on a.melding_id = m.id
                 inner join aktivitet_kontekst ak on a.id = ak.aktivitet_id
@@ -152,7 +125,7 @@ internal class ImporterOpenSearch(private val dispatcher: Dispatcher) {
             )
             union
             (
-                select a.id, a.level, a.aktivitet_uuid, a.tidsstempel, m.tekst, string_agg(concat_ws('$VALUE_SEPARATOR', kt.type, kn.navn, kv.verdi), '$ROW_SEPARATOR') as kontekster 
+                select a.id, a.level, a.aktivitet_uuid, a.tidsstempel, m.tekst 
                 from aktivitet a
                 inner join melding m on a.melding_id = m.id
                 inner join personident p on p.id = a.personident_id
