@@ -44,8 +44,12 @@ internal class ImporterOpenSearch(private val dispatcher: Dispatcher) {
 
     private fun utførArbeid(openSearchClient: SearchClient, dao: Dao, work: Work) {
         work.begin()
-        migrerAktivitetslogg(openSearchClient, dao, work.detaljer().first())
-        work.done()
+        try {
+            migrerAktivitetslogg(openSearchClient, dao, work.detaljer().first())
+            work.done()
+        } catch (err: Exception) {
+            log.error("fikk feil fra opensearch: {}. Markerer ikke arbeidet som ferdig, men går videre", err.message, err)
+        }
     }
 
     private fun migrerAktivitetslogg(openSearchClient: SearchClient, dao: Dao, ident: Long) {
