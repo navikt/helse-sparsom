@@ -5,6 +5,8 @@ import com.jillesvangurp.ktsearch.SearchClient
 import com.jillesvangurp.ktsearch.SearchResponse
 import com.jillesvangurp.ktsearch.scroll
 import com.jillesvangurp.ktsearch.search
+import com.jillesvangurp.searchdsls.querydsl.bool
+import com.jillesvangurp.searchdsls.querydsl.nested
 import com.jillesvangurp.searchdsls.querydsl.term
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
@@ -18,6 +20,15 @@ internal class AktivitetDao(private val client: SearchClient) {
         return runBlocking {
             val response = client.search(aktivitetsloggIndexName, scroll = "2m") {
                 query = term("fødselsnummer", ident)
+                query = bool {
+                    should(
+                        term("fødselsnummer", ident),
+                        nested {
+                            path = "kontekster"
+                            query = term("kontekster.aktørId", ident)
+                        }
+                    )
+                }
             }
             client.scroll(response).map {
                 it.mapTilAktivitetDto()
