@@ -5,6 +5,7 @@ class Varselkodemapper() {
         Varselkode.RV_UT_23 to listOf("Det er beregnet et negativt beløp"),
         Varselkode.RV_RE_1 to listOf("Fant ikke refusjonsgrad for perioden"),
         Varselkode.RV_IM_4 to listOf("Mottatt flere inntektsmeldinger - den første inntektsmeldingen som ble mottatt er lagt til grunn."),
+        Varselkode.RV_IM_25 to listOf("Arbeidsgiver har redusert utbetaling av arbeidsgiverperioden på grunn av: FerieEllerAvspasering"),
         Varselkode.RV_IM_8 to listOf("Arbeidsgiver har redusert utbetaling av arbeidsgiverperioden på grunn av:"),
         Varselkode.RV_IM_9 to listOf("ArbeidsforholdsID er fylt ut i inntektsmeldingen. Kontroller om brukeren har flere arbeidsforhold i samme virksomhet. Flere arbeidsforhold støttes ikke av systemet foreløpig."),
         Varselkode.RV_IM_16 to listOf("Inntektsmelding inneholder ikke arbeidsgiverperiode."),
