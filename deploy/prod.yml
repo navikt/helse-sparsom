@@ -18,7 +18,6 @@ spec:
     initialDelay: 5
   resources:
     limits:
-      cpu: 2000m
       memory: 1Gi
     requests:
       cpu: 50m
@@ -26,7 +25,7 @@ spec:
   replicas:
     min: 2
     max: 12
-    cpuThresholdPercentage: 70
+    cpuThresholdPercentage: 50
   prometheus:
     enabled: true
     path: /metrics
