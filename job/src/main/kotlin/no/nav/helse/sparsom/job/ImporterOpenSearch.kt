@@ -8,6 +8,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.jillesvangurp.ktsearch.SearchClient
 import com.jillesvangurp.ktsearch.bulk
 import com.jillesvangurp.ktsearch.bulkSession
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotliquery.Row
 import kotliquery.queryOf
@@ -15,6 +16,7 @@ import kotliquery.sessionOf
 import no.nav.helse.sparsom.*
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
+import java.lang.Exception
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.*
@@ -55,18 +57,31 @@ internal class ImporterOpenSearch(private val dispatcher: Dispatcher) {
         log.info("brukte ${t2 - t1} ms på å hente aktivietslogg fra psql")
 
         measureTimeMillis {
+            val maxRetries = 10
+            var retries = 0
             runBlocking {
-                val bulkSession = openSearchClient.bulkSession(bulkSize = 250, failOnFirstError = true)
-                aktiveter.forEach { (varselkode, aktivitet) ->
-                    @Language("JSON")
-                    val doc = """{ "varselkode": "${varselkode.name}" }"""
-                    bulkSession.update(
-                        id = aktivitet.id,
-                        doc = doc,
-                        index = "aktivitetslogg"
-                    )
-                }
-                bulkSession.flush()
+                var ok = false
+                do {
+                    try {
+                        val bulkSession = openSearchClient.bulkSession(bulkSize = 250, failOnFirstError = true)
+                        aktiveter.forEach { (varselkode, aktivitet) ->
+                            @Language("JSON")
+                            val doc = """{ "varselkode": "${varselkode.name}" }"""
+                            bulkSession.update(
+                                id = aktivitet.id,
+                                doc = doc,
+                                index = "aktivitetslogg"
+                            )
+                        }
+                        bulkSession.flush()
+                        ok = true
+                    } catch (err: Exception) {
+                        if (retries == maxRetries) throw err
+                        log.info("fikk en feil fra opensearch, men forsøker igjen om 1 sekund")
+                        delay(1000)
+                        retries += 1
+                    }
+                } while (!ok)
             }
         }.also {
             log.info("brukte $it ms på å sende til opensearch")
