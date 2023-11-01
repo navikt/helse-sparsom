@@ -56,7 +56,7 @@ internal class ImporterOpenSearch(private val dispatcher: Dispatcher) {
 
         measureTimeMillis {
             runBlocking {
-                val bulkSession = openSearchClient.bulkSession(bulkSize = 1000, failOnFirstError = true)
+                val bulkSession = openSearchClient.bulkSession(bulkSize = 250, failOnFirstError = true)
                 aktiveter.forEach { (varselkode, aktivitet) ->
                     @Language("JSON")
                     val doc = """{ "varselkode": "${varselkode.name}" }"""
