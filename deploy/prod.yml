@@ -23,8 +23,8 @@ spec:
       cpu: 50m
       memory: 512Mi
   replicas:
-    min: 2
-    max: 12
+    min: 12
+    max: 24
     cpuThresholdPercentage: 50
   prometheus:
     enabled: true
