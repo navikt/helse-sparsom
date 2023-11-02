@@ -1,14 +1,10 @@
 package no.nav.helse.sparsom
 
-import com.jillesvangurp.ktsearch.*
-import kotlinx.coroutines.runBlocking
+import com.jillesvangurp.ktsearch.KtorRestClient
+import com.jillesvangurp.ktsearch.SearchClient
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
-import no.nav.helse.sparsom.db.AktivitetDao
-import no.nav.helse.sparsom.db.DataSourceBuilder
-import no.nav.helse.sparsom.db.HendelseDao
 import org.slf4j.LoggerFactory
-import java.lang.Exception
 import java.net.URI
 
 const val opensearchIndexnavn = "aktivitetslogg"
@@ -21,25 +17,13 @@ fun main() {
 }
 
 private fun createApp(env: Map<String, String>): RapidsConnection {
-    val dataSourceBuilder = DataSourceBuilder(env)
-    val dataSource by lazy { dataSourceBuilder.getDataSource() }
     val openSearchClient = openSearchClient(env)
     return RapidApplication.create(env).apply {
-        AktivitetRiver(this, HendelseDao { dataSource }, AktivitetDao(dataSource), openSearchClient)
-        register(object : RapidsConnection.StatusListener {
-            override fun onStartup(rapidsConnection: RapidsConnection) {
-                dataSourceBuilder.migrate()
-            }
-
-            override fun onShutdown(rapidsConnection: RapidsConnection) {
-                dataSource.close()
-            }
-        })
+        AktivitetRiver(this, openSearchClient)
     }
 }
 
-private fun openSearchClient(env: Map<String, String>): SearchClient? {
-    if ("OPEN_SEARCH_PASSWORD" !in env) return null
+private fun openSearchClient(env: Map<String, String>): SearchClient {
     val uri = URI(env.getValue("OPEN_SEARCH_URI"))
     return SearchClient(KtorRestClient(
         host = uri.host,

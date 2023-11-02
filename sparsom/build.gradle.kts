@@ -1,15 +1,8 @@
 val mainClass = "no.nav.helse.sparsom.AppKt"
 
-val flywayCoreVersion = "9.1.6"
-val testcontainersPostgresqlVersion = "1.19.0"
-val mockkVersion = "1.12.5"
-val rapidsAndRiversVersion = "2023093008351696055717.ffdec6aede3d"
+val rapidsAndRiversVersion = "2023101613431697456627.0cdd93eb696f"
 dependencies {
-    implementation(project(":dao"))
-    implementation("org.flywaydb:flyway-core:$flywayCoreVersion")
     api("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
-    testImplementation("io.mockk:mockk:$mockkVersion")
-    testImplementation("org.testcontainers:postgresql:$testcontainersPostgresqlVersion")
 }
 
 tasks {

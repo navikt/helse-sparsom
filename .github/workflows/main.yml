@@ -64,7 +64,7 @@ jobs:
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: dev-gcp
-          RESOURCE: deploy/dev.yml,deploy/dev-db.yml
+          RESOURCE: deploy/dev.yml
           IMAGE: ${{ needs.set_version.outputs.image }}
       - uses: nais/deploy/actions/deploy@v1
         env:
@@ -76,7 +76,7 @@ jobs:
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: dev-gcp
-          RESOURCE: deploy/dev-opprydding.yml,deploy/dev-db.yml
+          RESOURCE: deploy/dev-opprydding.yml
           IMAGE: ${{ needs.set_version.outputs.image_opprydding }}
 
   deployProd:
@@ -89,11 +89,11 @@ jobs:
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: prod-gcp
-          RESOURCE: deploy/prod.yml,deploy/prod-db.yml
+          RESOURCE: deploy/prod.yml
           IMAGE: ${{ needs.set_version.outputs.image }}
       - uses: nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: prod-gcp
-          RESOURCE: deploy/prod-api.yml,deploy/prod-db.yml
+          RESOURCE: deploy/prod-api.yml
           IMAGE: ${{ needs.set_version.outputs.image_api }}

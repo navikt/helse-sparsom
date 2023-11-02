@@ -18,7 +18,6 @@ spec:
     initialDelay: 5
   resources:
     limits:
-      cpu: 2000m
       memory: 1024Mi
     requests:
       cpu: 50m
@@ -32,22 +31,9 @@ spec:
     path: /metrics
   kafka:
     pool: nav-dev
-  envFrom:
-    - secret: google-sql-helse-spleis-spleis-sparsom-9544ddd9
   openSearch:
     access: readwrite
     instance: sparsom
-  gcp:
-    sqlInstances:
-      - type: POSTGRES_14
-        diskAutoresize: true
-        databases:
-          - name: sparsom
-            envVarPrefix: DATABASE
-            users:
-            - name: sparsom-api
-            - name: sparsom-opprydding
-            - name: spesialist-migrering-sparsom
   secureLogs:
     enabled: true
   env:
@@ -57,7 +43,3 @@ spec:
       value: tbd-sparsom-v1
     - name: KAFKA_RESET_POLICY
       value: earliest
-    - name: DATABASE_SPARSOM_REGION
-      value: "europe-north1"
-    - name: DATABASE_SPARSOM_INSTANCE
-      value: "helse-spleis"

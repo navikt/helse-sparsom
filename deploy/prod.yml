@@ -34,43 +34,6 @@ spec:
   openSearch:
     access: readwrite
     instance: sparsom
-  gcp:
-    sqlInstances:
-      - type: POSTGRES_14
-        diskAutoresize: true
-        tier: db-custom-32-212992
-        pointInTimeRecovery: false
-        databases:
-          - name: sparsom
-            envVarPrefix: DATABASE
-            users:
-            - name: sparsom-api
-            - name: spesialist-migrering-sparsom
-        flags:
-          - name: max_wal_size
-            value: "10240"
-          - name: maintenance_work_mem
-            value: "41943040"
-          - name: max_connections
-            value: "200"
-          - name: work_mem
-            value: "5242880" # If this value is specified without units, it is taken as kilobytes
-          - name: effective_cache_size
-            value: "18350080"
-          - name: maintenance_work_mem
-            value: "94371840" # If this value is specified without units, it is taken as kilobytes
-          - name: autovacuum_work_mem
-            value: "25165824" # If this value is specified without units, it is taken as kilobytes
-          - name: random_page_cost
-            value: "1.2"
-          - name: max_worker_processes
-            value: "32"
-          - name: max_parallel_workers_per_gather
-            value: "4"
-          - name: max_parallel_workers
-            value: "24"
-          - name: max_parallel_maintenance_workers
-            value: "24"
   secureLogs:
     enabled: true
   env:
