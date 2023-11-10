@@ -47,7 +47,7 @@ internal class AktivitetRiver(
             val tidBrukt = measureTimeMillis {
                 runBlocking {
                     try {
-                        openSearchClient.bulk(refresh = Refresh.False) {
+                        openSearchClient.bulk(failOnFirstError = true, refresh = Refresh.False) {
                             tilOpenSearchAktiviteter(packet)
                                 .map {
                                     index(
