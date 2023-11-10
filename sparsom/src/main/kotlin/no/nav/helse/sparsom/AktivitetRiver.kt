@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.jillesvangurp.ktsearch.Refresh
 import com.jillesvangurp.ktsearch.SearchClient
 import com.jillesvangurp.ktsearch.bulk
 import kotlinx.coroutines.runBlocking
@@ -46,7 +47,7 @@ internal class AktivitetRiver(
             val tidBrukt = measureTimeMillis {
                 runBlocking {
                     try {
-                        openSearchClient.bulk {
+                        openSearchClient.bulk(refresh = Refresh.False) {
                             tilOpenSearchAktiviteter(packet)
                                 .map {
                                     index(
