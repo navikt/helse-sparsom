@@ -42,6 +42,11 @@ spec:
       - application: spanner
         namespace: tbd
         cluster: dev-gcp
+    outbound:
+      external:
+        - host: opensearch-tbd-sparsom-nav-dev.a.aivencloud.com
+          ports:
+            - port: 26482
   openSearch:
     access: read
     instance: sparsom
