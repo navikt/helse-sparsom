@@ -1,0 +1,11 @@
+apiVersion: aiven.io/v1alpha1
+kind: OpenSearch
+metadata:
+  labels:
+    team: tbd
+  name: opensearch-tbd-sparsom
+  namespace: tbd
+spec:
+  project: nav-dev
+  plan: startup-4
+  disk_space: 80G
