@@ -85,7 +85,7 @@ jobs:
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: prod-gcp
-          RESOURCE: deploy/prod.yml,deploy/prod-opensearch.yml
+          RESOURCE: deploy/prod.yml,deploy/prod-opensearch.yml,deploy/hpa.yml
           IMAGE: ${{ needs.set_version.outputs.image }}
       - uses: nais/deploy/actions/deploy@v1
         env:

@@ -22,10 +22,6 @@ spec:
     requests:
       cpu: 50m
       memory: 512Mi
-  replicas:
-    min: 6
-    max: 24
-    cpuThresholdPercentage: 50
   prometheus:
     enabled: true
     path: /metrics
