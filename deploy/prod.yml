@@ -30,6 +30,12 @@ spec:
   openSearch:
     access: readwrite
     instance: sparsom
+  accessPolicy:
+    outbound:
+      external:
+        - host: opensearch-tbd-sparsom-nav-prod.a.aivencloud.com
+          ports:
+            - port: 26482
   secureLogs:
     enabled: true
   env:
