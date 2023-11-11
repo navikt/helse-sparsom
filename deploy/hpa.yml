@@ -3,11 +3,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: sparsom
   namespace: tbd
-  ownerReferences:
-    - apiVersion: nais.io/v1alpha1
-      kind: Application
-      name: sparsom
-      uid: e123c6b4-1c25-409e-9a30-677b08333acd
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
