@@ -36,11 +36,11 @@ private val httpTraceLog = LoggerFactory.getLogger("tjenestekall")
 
 fun main() {
     val config = ApplicationConfiguration()
-    val app = createApp(config.ktorConfig, config.azureConfig, config.searchClient)
+    val app = createApp(config.ktorConfig, config.azureConfig, config.searchClient, config.spurteDuClient, config.azureClient)
     app.start(wait = true)
 }
 
-internal fun createApp(ktorConfig: KtorConfig, azureConfig: AzureAdAppConfig, searchClient: SearchClient) =
+internal fun createApp(ktorConfig: KtorConfig, azureConfig: AzureAdAppConfig, searchClient: SearchClient, spurteDuClient: SpurteDuClient, azureClient: AzureClient) =
     embeddedServer(
         factory = Netty,
         environment = applicationEngineEnvironment {
@@ -63,7 +63,7 @@ internal fun createApp(ktorConfig: KtorConfig, azureConfig: AzureAdAppConfig, se
                 requestResponseTracing(httpTraceLog)
                 nais()
                 azureAdAppAuthentication(azureConfig)
-                api(searchClient, API_SERVICE)
+                api(searchClient, API_SERVICE, spurteDuClient, azureClient)
             }
         },
         configure = {

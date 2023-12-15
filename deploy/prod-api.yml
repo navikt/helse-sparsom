@@ -23,7 +23,6 @@ spec:
   replicas:
     min: 2
     max: 4
-    cpuThresholdPercentage: 70
   prometheus:
     enabled: true
     path: /metrics
@@ -42,6 +41,8 @@ spec:
         namespace: tbd
         cluster: prod-gcp
     outbound:
+      rules:
+      - application: spurtedu
       external:
         - host: opensearch-tbd-sparsom-nav-prod.a.aivencloud.com
           ports:
