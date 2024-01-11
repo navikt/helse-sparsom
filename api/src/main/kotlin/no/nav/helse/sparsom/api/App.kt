@@ -5,24 +5,23 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.github.navikt.tbd_libs.azure.AzureTokenProvider
 import com.jillesvangurp.ktsearch.SearchClient
 import io.ktor.http.*
-import io.ktor.serialization.jackson.JacksonConverter
-import io.ktor.server.application.install
-import io.ktor.server.engine.applicationEngineEnvironment
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
-import io.ktor.server.plugins.callid.CallId
-import io.ktor.server.plugins.callid.callIdMdc
-import io.ktor.server.plugins.callloging.CallLogging
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.request.path
-import java.util.UUID
+import io.ktor.serialization.jackson.*
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import io.ktor.server.plugins.callid.*
+import io.ktor.server.plugins.callloging.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.request.*
 import no.nav.helse.sparsom.api.config.ApplicationConfiguration
 import no.nav.helse.sparsom.api.config.AzureAdAppConfig
 import no.nav.helse.sparsom.api.config.KtorConfig
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
+import java.util.*
 
 internal val objectMapper = jacksonObjectMapper()
     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
@@ -40,7 +39,7 @@ fun main() {
     app.start(wait = true)
 }
 
-internal fun createApp(ktorConfig: KtorConfig, azureConfig: AzureAdAppConfig, searchClient: SearchClient, spurteDuClient: SpurteDuClient, azureClient: AzureClient) =
+internal fun createApp(ktorConfig: KtorConfig, azureConfig: AzureAdAppConfig, searchClient: SearchClient, spurteDuClient: SpurteDuClient, azureClient: AzureTokenProvider) =
     embeddedServer(
         factory = Netty,
         environment = applicationEngineEnvironment {

@@ -1,6 +1,7 @@
 package no.nav.helse.sparsom.api
 
 import com.fasterxml.jackson.core.JsonParseException
+import com.github.navikt.tbd_libs.azure.AzureTokenProvider
 import com.jillesvangurp.ktsearch.SearchClient
 import io.ktor.http.auth.*
 import io.ktor.server.application.*
@@ -12,7 +13,7 @@ import kotlinx.coroutines.withContext
 import no.nav.helse.sparsom.api.dao.AktivitetDao
 import java.util.*
 
-internal fun Application.api(searchClient: SearchClient, authProviderName: String, spurteDuClient: SpurteDuClient, azureClient: AzureClient) {
+internal fun Application.api(searchClient: SearchClient, authProviderName: String, spurteDuClient: SpurteDuClient, azureClient: AzureTokenProvider) {
     val dao = AktivitetDao(searchClient)
     routing {
         authenticate(authProviderName) {
@@ -31,15 +32,15 @@ internal fun Application.api(searchClient: SearchClient, authProviderName: Strin
     }
 }
 
-private suspend fun ApplicationCall.ident(spurteDuClient: SpurteDuClient, azureClient: AzureClient): String? {
+private fun ApplicationCall.ident(spurteDuClient: SpurteDuClient, azureClient: AzureTokenProvider): String? {
     val ident = queryParam("ident").firstNotNullOfOrNull(::uuidOrNumericalOrNull) ?: return null
     val uuid = ident.uuidOrNull() ?: return ident
     return identFraSpurteDu(spurteDuClient, azureClient, uuid)
 }
 
-private suspend fun ApplicationCall.identFraSpurteDu(spurteDuClient: SpurteDuClient, azureClient: AzureClient, id: UUID): String? {
+private fun ApplicationCall.identFraSpurteDu(spurteDuClient: SpurteDuClient, azureClient: AzureTokenProvider, id: UUID): String? {
     val token = bearerToken ?: return null
-    val obo = azureClient.veksleTilOnBehalfOf(token, "api://${System.getenv("NAIS_CLUSTER_NAME")}.tbd.spurtedu/.default")
+    val obo = azureClient.onBehalfOfToken("api://${System.getenv("NAIS_CLUSTER_NAME")}.tbd.spurtedu/.default", token).token
     val tekstinnhold = spurteDuClient.utveksleSpurteDu(obo, id.toString()) ?: return null
     return try {
         val node = objectMapper.readTree(tekstinnhold)

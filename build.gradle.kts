@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.9.10"
+    kotlin("jvm") version "1.9.22"
 }
 
 val opensearchClientVersion = "2.1.4"
@@ -10,7 +10,7 @@ val junitJupiterVersion = "5.10.0"
 val postgresqlVersion = "42.6.0"
 val logbackClassicVersion = "1.4.11"
 val logstashVersion = "7.4"
-val jvmTargetVersion = "17"
+val jvmTargetVersion = "21"
 
 allprojects {
     group = "no.nav.helse"
@@ -19,8 +19,20 @@ allprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
 
     repositories {
+        val githubPassword: String? by project
         mavenCentral()
-        maven("https://jitpack.io")
+        /* ihht. https://github.com/navikt/utvikling/blob/main/docs/teknisk/Konsumere%20biblioteker%20fra%20Github%20Package%20Registry.md
+            så plasseres github-maven-repo (med autentisering) før nav-mirror slik at github actions kan anvende førstnevnte.
+            Det er fordi nav-mirroret kjører i Google Cloud og da ville man ellers fått unødvendige utgifter til datatrafikk mellom Google Cloud og GitHub
+         */
+        maven {
+            url = uri("https://maven.pkg.github.com/navikt/maven-release")
+            credentials {
+                username = "x-access-token"
+                password = githubPassword
+            }
+        }
+        maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
         maven("https://maven.tryformation.com/releases") {
             content {
                 includeGroup("com.jillesvangurp")
@@ -44,22 +56,19 @@ allprojects {
 
         implementation("com.zaxxer:HikariCP:$hikariVersion")
 
-        testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
-        testImplementation("org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion")
-        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
+        testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
+        testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     }
 
     tasks {
-        compileKotlin {
-            kotlinOptions.jvmTarget = jvmTargetVersion
-        }
-
-        compileTestKotlin {
-            kotlinOptions.jvmTarget = jvmTargetVersion
+        java {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(jvmTargetVersion)
+            }
         }
 
         withType<Wrapper> {
-            gradleVersion = "8.3"
+            gradleVersion = "8.5"
         }
 
     }
@@ -75,11 +84,5 @@ subprojects {
                 events("skipped", "failed")
             }
         }
-    }
-
-    dependencies {
-        testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
-        testImplementation("org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion")
-        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
     }
 }

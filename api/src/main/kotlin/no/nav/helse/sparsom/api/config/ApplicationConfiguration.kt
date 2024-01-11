@@ -4,13 +4,11 @@ import com.auth0.jwk.JwkProvider
 import com.auth0.jwk.JwkProviderBuilder
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.github.navikt.tbd_libs.azure.createAzureTokenClientFromEnvironment
 import com.jillesvangurp.ktsearch.KtorRestClient
 import com.jillesvangurp.ktsearch.SearchClient
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.engine.*
-import no.nav.helse.sparsom.api.AzureClient
 import no.nav.helse.sparsom.api.SpurteDuClient
 import no.nav.helse.sparsom.api.objectMapper
 import java.io.InputStream
@@ -30,14 +28,7 @@ internal class ApplicationConfiguration(env: Map<String, String> = System.getenv
 
     internal val searchClient by lazy { openSearchClient(env) }
 
-    private val httpClient = HttpClient(CIO)
-    internal val azureClient = AzureClient(
-        httpClient = httpClient,
-        tokenEndpoint = env.getValue("AZURE_OPENID_CONFIG_TOKEN_ENDPOINT"),
-        clientId = env.getValue("AZURE_APP_CLIENT_ID"),
-        clientSecret = env.getValue("AZURE_APP_CLIENT_SECRET"),
-        objectMapper = objectMapper
-    )
+    internal val azureClient = createAzureTokenClientFromEnvironment(env)
     internal val spurteDuClient = SpurteDuClient(objectMapper)
 }
 
