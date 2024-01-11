@@ -25,6 +25,10 @@ jobs:
     name: build docker image
     runs-on: ubuntu-latest
     needs: set_version
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [sparsom, api, opprydding]
     permissions:
       id-token: write
     steps:
@@ -35,7 +39,7 @@ jobs:
           java-version: '21.x'
           cache: 'gradle'
       - name: test and build
-        run: ./gradlew test build
+        run: ./gradlew ${{ matrix.app }}:build
         env:
           ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
       - name: build docker image
@@ -43,26 +47,8 @@ jobs:
         with:
           team: tbd
           tag: ${{ needs.set_version.outputs.tag }}
-          image_suffix: sparsom
-          docker_context: sparsom
-          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
-          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
-      - name: build api docker image
-        uses: nais/docker-build-push@v0
-        with:
-          team: tbd
-          tag: ${{ needs.set_version.outputs.tag }}
-          image_suffix: api
-          docker_context: api
-          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
-          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
-      - name: build opprydding docker image
-        uses: nais/docker-build-push@v0
-        with:
-          team: tbd
-          tag: ${{ needs.set_version.outputs.tag }}
-          image_suffix: opprydding
-          docker_context: opprydding
+          image_suffix: ${{ matrix.app }}
+          docker_context: ${{ matrix.app }}
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
 
