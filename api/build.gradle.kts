@@ -1,9 +1,6 @@
 val micrometerRegistryPrometheusVersion = "1.11.4"
 val ktorVersion = "2.3.7"
-val cloudSqlVersion = "1.7.2"
 val awaitilityVersion = "4.1.1"
-val flywayCoreVersion = "9.1.6"
-val testcontainersPostgresqlVersion = "1.19.0"
 val tbdLibsVersion = "2024.01.09-20.20-d52bae29"
 val mainClass = "no.nav.helse.sparsom.api.AppKt"
 
