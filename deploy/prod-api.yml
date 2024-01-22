@@ -22,7 +22,8 @@ spec:
       memory: 64Mi
   replicas:
     min: 2
-    max: 4
+    max: 2
+    disableAutoScaling: true
   prometheus:
     enabled: true
     path: /metrics
