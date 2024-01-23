@@ -12,12 +12,16 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.sparsom.api.objectMapper
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
+
+private val logger = LoggerFactory.getLogger("no.nav.helse.sparsom.App")
 
 internal class AktivitetDao(private val client: SearchClient) {
     fun hentAktiviteterFor(ident: String): List<AktivitetDto> {
         return runBlocking {
+            logger.debug("henter aktiviteter fra opensearch")
             val response = client.search(aktivitetsloggIndexName, scroll = "2m") {
                 query = term("fødselsnummer", ident)
                 query = bool {
@@ -30,9 +34,12 @@ internal class AktivitetDao(private val client: SearchClient) {
                     )
                 }
             }
+            logger.debug("mapper aktiviteter fra opensearch")
             client.scroll(response).map {
                 it.mapTilAktivitetDto()
-            }.toList()
+            }.toList().also {
+                logger.debug("aktiviteter mappet til liste")
+            }
         }
     }
 

@@ -19,6 +19,7 @@ internal fun Application.api(searchClient: SearchClient, authProviderName: Strin
         authenticate(authProviderName) {
             get("/api/aktiviteter") {
                 withContext(Dispatchers.IO) {
+                    application.log.debug("henter ident fra spurtedu")
                     val ident = call.ident(spurteDuClient, azureClient)
                     val aktiviteter = when {
                         ident != null -> dao.hentAktiviteterFor(ident)
