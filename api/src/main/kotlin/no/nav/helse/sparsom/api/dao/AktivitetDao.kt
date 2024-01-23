@@ -8,8 +8,10 @@ import com.jillesvangurp.ktsearch.search
 import com.jillesvangurp.searchdsls.querydsl.bool
 import com.jillesvangurp.searchdsls.querydsl.nested
 import com.jillesvangurp.searchdsls.querydsl.term
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.sparsom.api.objectMapper
 import org.slf4j.LoggerFactory
@@ -35,11 +37,18 @@ internal class AktivitetDao(private val client: SearchClient) {
                 }
             }
             logger.debug("mapper aktiviteter fra opensearch")
-            client.scroll(response).map {
+            client.scroll(response).concurrentMap {
                 it.mapTilAktivitetDto()
             }.toList().also {
                 logger.debug("aktiviteter mappet til liste")
             }
+        }
+    }
+
+    // https://stackoverflow.com/a/76510232/218423
+    private inline fun <T, R> Flow<T>.concurrentMap(crossinline transform: suspend (T) -> R): Flow<R> = channelFlow {
+        collect { item ->
+            launch { send(transform(item)) }
         }
     }
 
