@@ -39,8 +39,6 @@ spec:
     inbound:
       rules:
       - application: spanner
-        namespace: tbd
-        cluster: prod-gcp
     outbound:
       rules:
       - application: spurtedu
