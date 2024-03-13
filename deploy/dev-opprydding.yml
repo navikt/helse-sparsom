@@ -19,6 +19,10 @@ spec:
     pool: nav-dev
   secureLogs:
     enabled: true
+  observability:
+    autoInstrumentation:
+      enabled: true
+      runtime: java
   openSearch:
     access: readwrite
     instance: sparsom
