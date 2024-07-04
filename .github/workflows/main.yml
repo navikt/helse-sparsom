@@ -48,6 +48,7 @@ jobs:
           team: tbd
           tag: ${{ needs.set_version.outputs.tag }}
           image_suffix: ${{ matrix.app }}
+          dockerfile: Dockerfile
           docker_context: ${{ matrix.app }}
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
