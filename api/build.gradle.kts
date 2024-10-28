@@ -1,5 +1,5 @@
 val micrometerRegistryPrometheusVersion = "1.12.3"
-val ktorVersion = "2.3.7"
+val ktorVersion = "2.3.12"
 val awaitilityVersion = "4.1.1"
 val tbdLibsVersion = "2024.01.09-20.20-d52bae29"
 val mainClass = "no.nav.helse.sparsom.api.AppKt"
