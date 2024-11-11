@@ -59,11 +59,6 @@ allprojects {
                 languageVersion = JavaLanguageVersion.of(jvmTargetVersion)
             }
         }
-
-        withType<Wrapper> {
-            gradleVersion = "8.5"
-        }
-
     }
 }
 
