@@ -2,6 +2,7 @@ package no.nav.helse.sparsom.api
 
 import com.fasterxml.jackson.core.JsonParseException
 import com.github.navikt.tbd_libs.azure.AzureTokenProvider
+import com.github.navikt.tbd_libs.result_object.getOrThrow
 import com.jillesvangurp.ktsearch.SearchClient
 import io.ktor.http.auth.*
 import io.ktor.server.application.*
@@ -41,7 +42,7 @@ private fun ApplicationCall.ident(spurteDuClient: SpurteDuClient, azureClient: A
 
 private fun ApplicationCall.identFraSpurteDu(spurteDuClient: SpurteDuClient, azureClient: AzureTokenProvider, id: UUID): String? {
     val token = bearerToken ?: return null
-    val obo = azureClient.onBehalfOfToken("api://${System.getenv("NAIS_CLUSTER_NAME")}.tbd.spurtedu/.default", token).token
+    val obo = azureClient.onBehalfOfToken("api://${System.getenv("NAIS_CLUSTER_NAME")}.tbd.spurtedu/.default", token).getOrThrow().token
     val tekstinnhold = spurteDuClient.utveksleSpurteDu(obo, id.toString()) ?: return null
     return try {
         val node = objectMapper.readTree(tekstinnhold)

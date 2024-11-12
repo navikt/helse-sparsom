@@ -1,9 +1,15 @@
 package no.nav.helse.sparsom.opprydding
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
+import com.github.navikt.tbd_libs.rapids_and_rivers.River
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import com.jillesvangurp.ktsearch.KtorRestClient
 import com.jillesvangurp.ktsearch.SearchClient
 import com.jillesvangurp.ktsearch.deleteByQuery
 import com.jillesvangurp.searchdsls.querydsl.term
+import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.rapids_rivers.*
 import org.slf4j.LoggerFactory
@@ -46,7 +52,7 @@ private class Opprydding(rapidsConnection: RapidsConnection, private val searchC
         }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext) {
+    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
         val ident = packet["fødselsnummer"].asText()
         runBlocking {
             searchClient.deleteByQuery("aktivitetslogg") {

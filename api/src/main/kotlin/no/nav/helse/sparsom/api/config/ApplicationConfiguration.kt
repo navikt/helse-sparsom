@@ -8,7 +8,6 @@ import com.github.navikt.tbd_libs.azure.createAzureTokenClientFromEnvironment
 import com.jillesvangurp.ktsearch.KtorRestClient
 import com.jillesvangurp.ktsearch.SearchClient
 import io.ktor.server.auth.jwt.*
-import io.ktor.server.engine.*
 import no.nav.helse.sparsom.api.SpurteDuClient
 import no.nav.helse.sparsom.api.objectMapper
 import java.io.InputStream
@@ -45,13 +44,7 @@ private fun openSearchClient(env: Map<String, String>): SearchClient {
     )
 }
 
-internal class KtorConfig(private val httpPort: Int = 8080) {
-    fun configure(builder: ApplicationEngineEnvironmentBuilder) {
-        builder.connector {
-            port = httpPort
-        }
-    }
-}
+data class KtorConfig(val httpPort: Int = 8080)
 
 internal class AzureAdAppConfig(private val clientId: String, configurationUrl: String) {
     private val issuer: String

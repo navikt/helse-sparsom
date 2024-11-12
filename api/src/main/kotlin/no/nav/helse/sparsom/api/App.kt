@@ -11,9 +11,10 @@ import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
+import io.ktor.server.engine.connector
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.callid.*
-import io.ktor.server.plugins.callloging.*
+import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import no.nav.helse.sparsom.api.config.ApplicationConfiguration
@@ -42,31 +43,32 @@ fun main() {
 internal fun createApp(ktorConfig: KtorConfig, azureConfig: AzureAdAppConfig, searchClient: SearchClient, spurteDuClient: SpurteDuClient, azureClient: AzureTokenProvider) =
     embeddedServer(
         factory = Netty,
-        environment = applicationEngineEnvironment {
-            ktorConfig.configure(this)
+        environment = applicationEnvironment {
             log = LoggerFactory.getLogger("no.nav.helse.sparsom.api.App")
-            module {
-                install(CallId) {
-                    header("callId")
-                    verify { it.isNotEmpty() }
-                    generate { UUID.randomUUID().toString() }
-                }
-                install(CallLogging) {
-                    logger = httpTraceLog
-                    level = Level.INFO
-                    disableDefaultColors()
-                    callIdMdc("callId")
-                    filter { call -> call.request.path().startsWith("/api/") }
-                }
-                install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) }
-                requestResponseTracing(httpTraceLog)
-                nais()
-                azureAdAppAuthentication(azureConfig)
-                api(searchClient, API_SERVICE, spurteDuClient, azureClient)
-            }
         },
         configure = {
+            connector {
+                port = ktorConfig.httpPort
+            }
             this.responseWriteTimeoutSeconds = 30
+        })
+    {
+        install(CallId) {
+            header("callId")
+            verify { it.isNotEmpty() }
+            generate { UUID.randomUUID().toString() }
         }
-    )
+        install(CallLogging) {
+            logger = httpTraceLog
+            level = Level.INFO
+            disableDefaultColors()
+            callIdMdc("callId")
+            filter { call -> call.request.path().startsWith("/api/") }
+        }
+        install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) }
+        requestResponseTracing(httpTraceLog)
+        nais()
+        azureAdAppAuthentication(azureConfig)
+        api(searchClient, API_SERVICE, spurteDuClient, azureClient)
+    }
 

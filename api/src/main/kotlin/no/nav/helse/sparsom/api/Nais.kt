@@ -2,9 +2,7 @@ package no.nav.helse.sparsom.api
 
 import io.ktor.http.*
 import io.ktor.server.application.Application
-import io.ktor.server.application.call
 import io.ktor.server.application.install
-import io.ktor.server.application.log
 import io.ktor.server.metrics.micrometer.MicrometerMetrics
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
@@ -23,7 +21,6 @@ import io.prometheus.client.exporter.common.TextFormat
 import java.io.CharArrayWriter
 
 internal fun Application.nais() {
-    val applicationlog = log
     install(MicrometerMetrics) {
         registry = PrometheusMeterRegistry(
             PrometheusConfig.DEFAULT,
