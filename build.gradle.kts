@@ -2,8 +2,8 @@ plugins {
     kotlin("jvm") version "2.0.21"
 }
 
-val opensearchClientVersion = "2.1.4"
-val jacksonVersion = "2.16.1"
+val opensearchClientVersion = "2.3.0"
+val jacksonVersion = "2.18.1"
 val junitJupiterVersion = "5.11.3"
 val logbackClassicVersion = "1.4.14"
 val logstashVersion = "7.4"
