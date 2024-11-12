@@ -7,7 +7,6 @@ val jacksonVersion = "2.16.1"
 val junitJupiterVersion = "5.10.2"
 val logbackClassicVersion = "1.4.14"
 val logstashVersion = "7.4"
-val jvmTargetVersion = "21"
 
 allprojects {
     group = "no.nav.helse"
@@ -53,11 +52,9 @@ allprojects {
         testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     }
 
-    tasks {
-        java {
-            toolchain {
-                languageVersion = JavaLanguageVersion.of(jvmTargetVersion)
-            }
+    kotlin {
+        jvmToolchain {
+            languageVersion.set(JavaLanguageVersion.of("21"))
         }
     }
 }
