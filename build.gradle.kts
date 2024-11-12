@@ -5,7 +5,7 @@ plugins {
 val opensearchClientVersion = "2.3.0"
 val jacksonVersion = "2.18.1"
 val junitJupiterVersion = "5.11.3"
-val logbackClassicVersion = "1.4.14"
+val logbackClassicVersion = "1.5.12"
 val logstashVersion = "7.4"
 
 allprojects {
