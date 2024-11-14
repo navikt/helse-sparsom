@@ -32,8 +32,8 @@ internal class AktivitetRiver(
 ): River.PacketListener {
     init {
         River(rapidsConnection).apply {
+            precondition { it.requireValue("@event_name", "aktivitetslogg_ny_aktivitet") }
             validate {
-                it.demandValue("@event_name", "aktivitetslogg_ny_aktivitet")
                 it.requireKey("fødselsnummer", "@id", "@opprettet")
                 it.requireArray("aktiviteter") {
                     require("id") { UUID.fromString(it.asText()) }

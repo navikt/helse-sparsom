@@ -45,8 +45,8 @@ private fun openSearchClient(env: Map<String, String>): SearchClient {
 private class Opprydding(rapidsConnection: RapidsConnection, private val searchClient: SearchClient) : River.PacketListener {
     init {
         River(rapidsConnection).apply {
+            precondition { it.requireValue("@event_name", "slett_person") }
             validate {
-                it.demandValue("@event_name", "slett_person")
                 it.requireKey("@id", "fødselsnummer")
             }
         }.register(this)
