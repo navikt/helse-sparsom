@@ -1,7 +1,7 @@
 val micrometerRegistryPrometheusVersion = "1.12.3"
 val ktorVersion = "3.0.1"
 val awaitilityVersion = "4.1.1"
-val tbdLibsVersion = "2024.11.14-07.56-63a8564f"
+val tbdLibsVersion = "2024.11.15-09.09-08ca346b"
 val mainClass = "no.nav.helse.sparsom.api.AppKt"
 
 dependencies {

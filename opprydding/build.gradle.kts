@@ -1,5 +1,5 @@
 val mainClass = "no.nav.helse.sparsom.opprydding.AppKt"
-val rapidsAndRiversVersion = "2024111408081731568123.6619b48b7043"
+val rapidsAndRiversVersion = "2024111509181731658731.11009b44c672"
 
 dependencies {
     api("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
