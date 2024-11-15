@@ -6,7 +6,7 @@ val opensearchClientVersion = "2.3.0"
 val jacksonVersion = "2.18.1"
 val junitJupiterVersion = "5.11.3"
 val logbackClassicVersion = "1.5.12"
-val logstashVersion = "7.4"
+val logbackEncoderVersion = "8.0"
 
 allprojects {
     group = "no.nav.helse"
@@ -39,7 +39,7 @@ allprojects {
     dependencies {
         implementation("com.jillesvangurp:search-client:$opensearchClientVersion")
         implementation("ch.qos.logback:logback-classic:$logbackClassicVersion")
-        implementation("net.logstash.logback:logstash-logback-encoder:$logstashVersion") {
+        implementation("net.logstash.logback:logstash-logback-encoder:$logbackEncoderVersion") {
             exclude("com.fasterxml.jackson.core")
             exclude("com.fasterxml.jackson.dataformat")
         }
