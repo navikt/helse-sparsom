@@ -13,13 +13,8 @@ import no.nav.helse.sparsom.api.objectMapper
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URI
-import java.net.URL
 
 internal class ApplicationConfiguration(env: Map<String, String> = System.getenv()) {
-    internal val ktorConfig = KtorConfig(
-        httpPort = env["HTTP_PORT"]?.toInt() ?: 8080
-    )
-
     internal val azureConfig = AzureAdAppConfig(
         clientId = env.getValue("AZURE_APP_CLIENT_ID"),
         configurationUrl = env.getValue("AZURE_APP_WELL_KNOWN_URL")
@@ -44,8 +39,6 @@ private fun openSearchClient(env: Map<String, String>): SearchClient {
     )
 }
 
-data class KtorConfig(val httpPort: Int = 8080)
-
 internal class AzureAdAppConfig(private val clientId: String, configurationUrl: String) {
     private val issuer: String
     private val jwkProvider: JwkProvider
@@ -57,7 +50,7 @@ internal class AzureAdAppConfig(private val clientId: String, configurationUrl: 
             this.jwksUri = it["jwks_uri"].textValue()
         }
 
-        jwkProvider = JwkProviderBuilder(URL(this.jwksUri)).build()
+        jwkProvider = JwkProviderBuilder(URI(this.jwksUri).toURL()).build()
     }
 
     fun configureVerification(configuration: JWTAuthenticationProvider.Config) {
@@ -73,7 +66,7 @@ internal class AzureAdAppConfig(private val clientId: String, configurationUrl: 
         return jacksonObjectMapper().readTree(responseBody)
     }
 
-    private fun String.fetchUrl() = with(URL(this).openConnection() as HttpURLConnection) {
+    private fun String.fetchUrl() = with(URI(this).toURL().openConnection() as HttpURLConnection) {
         requestMethod = "GET"
         val stream: InputStream? = if (responseCode < 300) this.inputStream else this.errorStream
         responseCode to stream?.bufferedReader()?.readText()
