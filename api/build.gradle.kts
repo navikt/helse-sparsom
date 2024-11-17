@@ -3,7 +3,6 @@ val mainClass = "no.nav.helse.sparsom.api.AppKt"
 
 dependencies {
     implementation("com.github.navikt.tbd-libs:naisful-app:$tbdLibsVersion")
-    implementation("com.github.navikt.tbd-libs:azure-token-client-default:$tbdLibsVersion")
     implementation("io.ktor:ktor-server-auth-jwt") {
         exclude(group = "junit")
     }

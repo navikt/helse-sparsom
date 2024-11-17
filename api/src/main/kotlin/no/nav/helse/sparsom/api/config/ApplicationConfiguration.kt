@@ -4,12 +4,9 @@ import com.auth0.jwk.JwkProvider
 import com.auth0.jwk.JwkProviderBuilder
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.github.navikt.tbd_libs.azure.createAzureTokenClientFromEnvironment
 import com.jillesvangurp.ktsearch.KtorRestClient
 import com.jillesvangurp.ktsearch.SearchClient
 import io.ktor.server.auth.jwt.*
-import no.nav.helse.sparsom.api.SpurteDuClient
-import no.nav.helse.sparsom.api.objectMapper
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URI
@@ -21,9 +18,6 @@ internal class ApplicationConfiguration(env: Map<String, String> = System.getenv
     )
 
     internal val searchClient by lazy { openSearchClient(env) }
-
-    internal val azureClient = createAzureTokenClientFromEnvironment(env)
-    internal val spurteDuClient = SpurteDuClient(objectMapper)
 }
 
 private fun openSearchClient(env: Map<String, String>): SearchClient {

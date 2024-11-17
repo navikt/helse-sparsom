@@ -41,8 +41,6 @@ spec:
       rules:
       - application: spanner
     outbound:
-      rules:
-        - application: spurtedu
       external:
         - host: opensearch-tbd-sparsom-nav-dev.a.aivencloud.com
           ports:

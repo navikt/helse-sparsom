@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.github.navikt.tbd_libs.azure.AzureTokenProvider
 import com.github.navikt.tbd_libs.naisful.naisApp
 import com.jillesvangurp.ktsearch.SearchClient
 import io.micrometer.core.instrument.Clock
@@ -26,11 +25,11 @@ internal val objectMapper = jacksonObjectMapper()
 
 fun main() {
     val config = ApplicationConfiguration()
-    val app = createApp(config.azureConfig, config.searchClient, config.spurteDuClient, config.azureClient)
+    val app = createApp(config.azureConfig, config.searchClient)
     app.start(wait = true)
 }
 
-internal fun createApp(azureConfig: AzureAdAppConfig, searchClient: SearchClient, spurteDuClient: SpurteDuClient, azureClient: AzureTokenProvider) =
+internal fun createApp(azureConfig: AzureAdAppConfig, searchClient: SearchClient) =
     naisApp(
         meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM),
         objectMapper = objectMapper,
@@ -38,6 +37,6 @@ internal fun createApp(azureConfig: AzureAdAppConfig, searchClient: SearchClient
         callLogger = LoggerFactory.getLogger("tjenestekall")
     ) {
         azureAdAppAuthentication(azureConfig)
-        api(searchClient, API_SERVICE, spurteDuClient, azureClient)
+        api(searchClient, API_SERVICE)
     }
 
