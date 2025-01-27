@@ -1,4 +1,4 @@
-val tbdLibsVersion = "2024.11.25-10.59-6f263a10"
+val tbdLibsVersion = "2025.01.27-12.50-76316f3b"
 val mainClass = "no.nav.helse.sparsom.api.AppKt"
 
 dependencies {
