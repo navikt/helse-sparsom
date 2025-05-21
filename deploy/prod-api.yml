@@ -39,7 +39,7 @@ spec:
   accessPolicy:
     inbound:
       rules:
-      - application: spanner
+        - application: spanner
     outbound:
       external:
         - host: opensearch-tbd-sparsom-nav-prod.a.aivencloud.com
@@ -50,3 +50,7 @@ spec:
     instance: sparsom
   secureLogs:
     enabled: true
+  observability:
+    logging:
+      destinations:
+        - id: elastic

@@ -28,6 +28,10 @@ spec:
     - name: KAFKA_CONSUMER_GROUP_ID
       value: tbd-sparsom-opprydding-v1
     - name: DATABASE_REGION
-      value: "europe-north1"
+      value: europe-north1
     - name: DATABASE_INSTANCE
       value: sparsom
+  observability:
+    logging:
+      destinations:
+        - id: elastic

@@ -48,3 +48,7 @@ spec:
       value: tbd-sparsom-v1
     - name: KAFKA_RESET_POLICY
       value: earliest
+  observability:
+    logging:
+      destinations:
+        - id: elastic
