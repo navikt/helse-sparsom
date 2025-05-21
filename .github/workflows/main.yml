@@ -3,10 +3,10 @@ name: Sparsom
 on:
   push:
     paths-ignore:
-      - '.idea/**'
-      - 'README.md'
-      - 'LICENSE'
-      - 'CODEOWNERS'
+      - ".idea/**"
+      - "README.md"
+      - "LICENSE"
+      - "CODEOWNERS"
     branches:
       - main
 env:
@@ -35,9 +35,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '21.x'
-          cache: 'gradle'
+          distribution: "temurin"
+          java-version: "21.x"
+          cache: "gradle"
       - name: test and build
         run: ./gradlew ${{ matrix.app }}:build
         env:
@@ -63,17 +63,17 @@ jobs:
         env:
           CLUSTER: dev-gcp
           RESOURCE: deploy/dev.yml,deploy/dev-opensearch.yml,deploy/dev-serviceintegration.yml
-          IMAGE: ${{ env.CONTAINER_REGISTRY }}/${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}/tbd/${{ github.event.repository.name }}-sparsom:${{ needs.set_version.outputs.tag }}
+          IMAGE: ${{ env.CONTAINER_REGISTRY }}/nais-management-233d/tbd/${{ github.event.repository.name }}-sparsom:${{ needs.set_version.outputs.tag }}
       - uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: dev-gcp
           RESOURCE: deploy/dev-api.yml
-          IMAGE: ${{ env.CONTAINER_REGISTRY }}/${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}/tbd/${{ github.event.repository.name }}-api:${{ needs.set_version.outputs.tag }}
+          IMAGE: ${{ env.CONTAINER_REGISTRY }}/nais-management-233d/tbd/${{ github.event.repository.name }}-api:${{ needs.set_version.outputs.tag }}
       - uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: dev-gcp
           RESOURCE: deploy/dev-opprydding.yml
-          IMAGE: ${{ env.CONTAINER_REGISTRY }}/${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}/tbd/${{ github.event.repository.name }}-opprydding:${{ needs.set_version.outputs.tag }}
+          IMAGE: ${{ env.CONTAINER_REGISTRY }}/nais-management-233d/tbd/${{ github.event.repository.name }}-opprydding:${{ needs.set_version.outputs.tag }}
 
   deployProd:
     name: deploy to prod
@@ -87,9 +87,9 @@ jobs:
         env:
           CLUSTER: prod-gcp
           RESOURCE: deploy/prod.yml,deploy/prod-opensearch.yml,deploy/hpa.yml,deploy/prod-serviceintegration.yml
-          IMAGE: ${{ env.CONTAINER_REGISTRY }}/${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}/tbd/${{ github.event.repository.name }}-sparsom:${{ needs.set_version.outputs.tag }}
+          IMAGE: ${{ env.CONTAINER_REGISTRY }}/nais-management-233d/tbd/${{ github.event.repository.name }}-sparsom:${{ needs.set_version.outputs.tag }}
       - uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: prod-gcp
           RESOURCE: deploy/prod-api.yml
-          IMAGE: ${{ env.CONTAINER_REGISTRY }}/${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}/tbd/${{ github.event.repository.name }}-api:${{ needs.set_version.outputs.tag }}
+          IMAGE: ${{ env.CONTAINER_REGISTRY }}/nais-management-233d/tbd/${{ github.event.repository.name }}-api:${{ needs.set_version.outputs.tag }}
