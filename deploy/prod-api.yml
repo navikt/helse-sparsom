@@ -41,6 +41,9 @@ spec:
       rules:
         - application: spanner
     outbound:
+      rules:
+        - application: logging
+          namespace: nais-system
       external:
         - host: opensearch-tbd-sparsom-nav-prod.a.aivencloud.com
           ports:

@@ -19,6 +19,11 @@ spec:
     pool: nav-dev
   secureLogs:
     enabled: true
+  accessPolicy:
+    outbound:
+      rules:
+        - application: logging
+          namespace: nais-system
   openSearch:
     access: readwrite
     instance: sparsom

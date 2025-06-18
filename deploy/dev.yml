@@ -35,6 +35,9 @@ spec:
     instance: sparsom
   accessPolicy:
     outbound:
+      rules:
+        - application: logging
+          namespace: nais-system
       external:
         - host: opensearch-tbd-sparsom-nav-dev.a.aivencloud.com
           ports:
