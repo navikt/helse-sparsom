@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "2.2.0"
 }
 
-val ktorVersion = "3.1.2"
+val ktorVersion = "3.2.3"
 val opensearchClientVersion = "2.3.0"
 val jacksonVersion = "2.18.3"
 val junitJupiterVersion = "5.12.1"
