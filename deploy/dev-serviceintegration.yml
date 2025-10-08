@@ -3,7 +3,7 @@ kind: ServiceIntegration
 metadata:
   labels:
     team: tbd
-  name: opensearch-tbd-sparsom-prometheus
+  name: opensearch-tbd-sparsom-prometheus-dev
   namespace: tbd
 spec:
   project: nav-dev
