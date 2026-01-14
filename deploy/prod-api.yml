@@ -51,8 +51,6 @@ spec:
   openSearch:
     access: read
     instance: sparsom
-  secureLogs:
-    enabled: true
   observability:
     logging:
       destinations:

@@ -44,8 +44,6 @@ spec:
         - host: opensearch-tbd-sparsom-nav-prod.a.aivencloud.com
           ports:
             - port: 26482
-  secureLogs:
-    enabled: true
   env:
     - name: KAFKA_RAPID_TOPIC
       value: tbd.rapid.v1
