@@ -6,7 +6,7 @@ val ktorVersion = "3.2.3"
 val opensearchClientVersion = "2.3.0"
 val jacksonVersion = "2.18.3"
 val junitJupiterVersion = "5.12.1"
-val logbackClassicVersion = "1.5.18"
+val logbackClassicVersion = "1.5.25"
 val logbackEncoderVersion = "8.0"
 
 allprojects {
