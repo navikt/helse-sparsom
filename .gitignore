@@ -6,6 +6,8 @@ build/
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
+.idea/.name
+.idea/copilot.data.migration.agent.xml
 .idea/jarRepositories.xml
 .idea/compiler.xml
 .idea/libraries/
@@ -40,3 +42,5 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+*.swp
