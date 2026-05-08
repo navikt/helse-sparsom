@@ -9,6 +9,9 @@ on:
       - "CODEOWNERS"
     branches:
       - main
+  schedule:
+    - cron: '0 4 * * 3'
+      timezone: 'Europe/Oslo'
 env:
   CONTAINER_REGISTRY: europe-north1-docker.pkg.dev
 jobs:
