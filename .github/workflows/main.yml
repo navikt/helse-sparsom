@@ -65,23 +65,23 @@ jobs:
     if: ${{ github.ref_name == 'main' }}
     permissions:
       id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - image_suffix: sparsom
+            resource: deploy/dev.yml,deploy/dev-opensearch.yml,deploy/dev-serviceintegration.yml
+          - image_suffix: api
+            resource: deploy/dev-api.yml
+          - image_suffix: opprydding
+            resource: deploy/dev-opprydding.yml
     steps:
       - uses: actions/checkout@v6
       - uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: dev-gcp
-          RESOURCE: deploy/dev.yml,deploy/dev-opensearch.yml,deploy/dev-serviceintegration.yml
-          IMAGE: ${{ env.CONTAINER_REGISTRY }}/nais-management-233d/tbd/${{ github.event.repository.name }}-sparsom:${{ needs.set_version.outputs.tag }}
-      - uses: nais/deploy/actions/deploy@v2
-        env:
-          CLUSTER: dev-gcp
-          RESOURCE: deploy/dev-api.yml
-          IMAGE: ${{ env.CONTAINER_REGISTRY }}/nais-management-233d/tbd/${{ github.event.repository.name }}-api:${{ needs.set_version.outputs.tag }}
-      - uses: nais/deploy/actions/deploy@v2
-        env:
-          CLUSTER: dev-gcp
-          RESOURCE: deploy/dev-opprydding.yml
-          IMAGE: ${{ env.CONTAINER_REGISTRY }}/nais-management-233d/tbd/${{ github.event.repository.name }}-opprydding:${{ needs.set_version.outputs.tag }}
+          RESOURCE: ${{ matrix.app.resource }}
+          IMAGE: ${{ env.CONTAINER_REGISTRY }}/nais-management-233d/tbd/${{ github.event.repository.name }}-${{ matrix.app.image_suffix }}:${{ needs.set_version.outputs.tag }}
 
   deployProd:
     name: Deploy to prod
@@ -90,15 +90,18 @@ jobs:
     if: ${{ github.ref_name == 'main' }}
     permissions:
       id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - image_suffix: sparsom
+            resource: deploy/prod.yml,deploy/prod-opensearch.yml,deploy/hpa.yml,deploy/prod-serviceintegration.yml
+          - image_suffix: api
+            resource: deploy/prod-api.yml
     steps:
       - uses: actions/checkout@v6
       - uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: prod-gcp
-          RESOURCE: deploy/prod.yml,deploy/prod-opensearch.yml,deploy/hpa.yml,deploy/prod-serviceintegration.yml
-          IMAGE: ${{ env.CONTAINER_REGISTRY }}/nais-management-233d/tbd/${{ github.event.repository.name }}-sparsom:${{ needs.set_version.outputs.tag }}
-      - uses: nais/deploy/actions/deploy@v2
-        env:
-          CLUSTER: prod-gcp
-          RESOURCE: deploy/prod-api.yml
-          IMAGE: ${{ env.CONTAINER_REGISTRY }}/nais-management-233d/tbd/${{ github.event.repository.name }}-api:${{ needs.set_version.outputs.tag }}
+          RESOURCE: ${{ matrix.app.resource }}
+          IMAGE: ${{ env.CONTAINER_REGISTRY }}/nais-management-233d/tbd/${{ github.event.repository.name }}-${{ matrix.app.image_suffix }}:${{ needs.set_version.outputs.tag }}
