@@ -70,7 +70,7 @@ jobs:
       matrix:
         app:
           - image_suffix: sparsom
-            resource: deploy/dev.yml,deploy/dev-opensearch.yml,deploy/dev-serviceintegration.yml
+            resource: deploy/dev.yml
           - image_suffix: api
             resource: deploy/dev-api.yml
           - image_suffix: opprydding
