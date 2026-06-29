@@ -95,7 +95,7 @@ jobs:
       matrix:
         app:
           - image_suffix: sparsom
-            resource: deploy/prod.yml,deploy/prod-opensearch.yml,deploy/hpa.yml,deploy/prod-serviceintegration.yml
+            resource: deploy/prod.yml,deploy/hpa.yml
           - image_suffix: api
             resource: deploy/prod-api.yml
     steps:
