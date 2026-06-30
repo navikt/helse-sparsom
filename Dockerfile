@@ -9,4 +9,4 @@ WORKDIR /app
 
 CMD ["-jar", "app.jar"]
 
-ARG BYGD_PA_NY='2026-01-30T10:18:45'
+ARG BYGD_PA_NY='2026-06-30T10:59:00'
