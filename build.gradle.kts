@@ -3,17 +3,14 @@ plugins {
 }
 
 val ktorVersion = "3.2.3"
-val opensearchClientVersion = "2.3.0"
+val opensearchClientVersion = "2.8.7"
 val jacksonVersion = "2.18.3"
 val junitJupiterVersion = "5.12.1"
 val logbackClassicVersion = "1.5.25"
 val logbackEncoderVersion = "8.0"
 
 allprojects {
-    group = "no.nav.helse"
-    version = properties["version"] ?: "local-build"
-
-    apply(plugin = "org.jetbrains.kotlin.jvm")
+    plugins.apply("org.jetbrains.kotlin.jvm")
 
     // Sett opp repositories basert på om vi kjører i CI eller ikke
     // Jf. https://github.com/navikt/utvikling/blob/main/docs/teknisk/Konsumere%20biblioteker%20fra%20Github%20Package%20Registry.md
@@ -83,7 +80,7 @@ allprojects {
 }
 
 subprojects {
-    apply(plugin = "org.jetbrains.kotlin.jvm")
+    plugins.apply("org.jetbrains.kotlin.jvm")
 
     tasks {
         withType<Test> {
