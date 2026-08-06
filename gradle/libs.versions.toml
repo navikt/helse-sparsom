@@ -1,5 +1,5 @@
 [versions]
-opensearchClient = "2.8.7"
+opensearchClient = "2.9.0"
 sasGradlePlugins = "20260804.1151"
 tbd-libs = "2026.01.22-09.16-1d3f6039"
 
