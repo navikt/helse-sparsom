@@ -1,27 +1,25 @@
-val tbdLibsVersion = "2026.01.22-09.16-1d3f6039"
-val mainClass = "no.nav.helse.sparsom.api.AppKt"
-
-dependencies {
-    implementation("com.github.navikt.tbd-libs:naisful-app:$tbdLibsVersion")
-    implementation("io.ktor:ktor-server-auth-jwt") {
-        exclude(group = "junit")
-    }
+plugins {
+    id("no.nav.helse.sas.sas-deployable")
 }
 
-tasks.named<Jar>("jar") {
-    archiveBaseName.set("app")
+sasDeployable {
+    mainClass = "no.nav.helse.sparsom.api.AppKt"
+    imageName = "helse-sparsom-api"
+}
 
-    manifest {
-        attributes["Main-Class"] = mainClass
-        attributes["Class-Path"] = configurations.runtimeClasspath.get().joinToString(separator = " ") {
-            it.name
-        }
+dependencies {
+    implementation(libs.tbd.libs.naisful.app)
+    implementation(libs.ktor.server.auth.jwt) {
+        exclude(group = "junit")
     }
-
-    doLast {
-        configurations.runtimeClasspath.get().forEach {
-            val file = File("${layout.buildDirectory.get()}/libs/${it.name}")
-            if (!file.exists()) it.copyTo(file)
-        }
+    implementation(libs.search.client)
+    implementation(libs.logback.classic)
+    implementation(libs.logback.logstash.encoder) {
+        exclude("com.fasterxml.jackson.core")
+        exclude("com.fasterxml.jackson.dataformat")
     }
+    implementation(libs.jackson.module.kotlin) {
+        exclude("org.jetbrains.kotlin:kotlin-reflect")
+    }
+    implementation(libs.jackson.datatype.jsr310)
 }

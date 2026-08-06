@@ -1,0 +1,18 @@
+[versions]
+opensearchClient = "2.8.7"
+sasGradlePlugins = "20260804.1151"
+tbd-libs = "2026.01.22-09.16-1d3f6039"
+
+[libraries]
+jackson-datatype-jsr310 = { group = "com.fasterxml.jackson.datatype", name = "jackson-datatype-jsr310" }
+jackson-module-kotlin = { group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin" }
+ktor-server-auth-jwt = { group = "io.ktor", name = "ktor-server-auth-jwt" }
+logback-classic = "ch.qos.logback:logback-classic:1.5.38"
+logback-logstash-encoder = "net.logstash.logback:logstash-logback-encoder:8.0"
+rapids-and-rivers = "com.github.navikt:rapids-and-rivers:2026011411051768385145.e8ebad1177b4"
+search-client = { module = "com.jillesvangurp:search-client", version.ref = "opensearchClient" }
+tbd-libs-naisful-app = { module = "com.github.navikt.tbd-libs:naisful-app", version.ref = "tbd-libs" }
+
+[plugins]
+sas-deployable = { id = "no.nav.helse.sas.sas-deployable", version.ref = "sasGradlePlugins" }
+sas-root = { id = "no.nav.helse.sas.sas-root", version.ref = "sasGradlePlugins" }

@@ -1,27 +1,22 @@
-val mainClass = "no.nav.helse.sparsom.AppKt"
-
-val rapidsAndRiversVersion = "2026011411051768385145.e8ebad1177b4"
-
-dependencies {
-    api("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
+plugins {
+    id("no.nav.helse.sas.sas-deployable")
 }
 
-tasks {
-    withType<Jar> {
-        archiveBaseName.set("app")
+sasDeployable {
+    mainClass = "no.nav.helse.sparsom.AppKt"
+    imageName = "helse-sparsom-sparsom"
+}
 
-        manifest {
-            attributes["Main-Class"] = mainClass
-            attributes["Class-Path"] = configurations.runtimeClasspath.get().joinToString(separator = " ") {
-                it.name
-            }
-        }
-
-        doLast {
-            configurations.runtimeClasspath.get().forEach {
-                val file = File("${layout.buildDirectory.get()}/libs/${it.name}")
-                if (!file.exists()) it.copyTo(file)
-            }
-        }
+dependencies {
+    implementation(libs.rapids.and.rivers)
+    implementation(libs.search.client)
+    implementation(libs.logback.classic)
+    implementation(libs.logback.logstash.encoder) {
+        exclude("com.fasterxml.jackson.core")
+        exclude("com.fasterxml.jackson.dataformat")
     }
+    implementation(libs.jackson.module.kotlin) {
+        exclude("org.jetbrains.kotlin:kotlin-reflect")
+    }
+    implementation(libs.jackson.datatype.jsr310)
 }
