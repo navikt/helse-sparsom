@@ -1,6 +1,6 @@
 [versions]
 opensearchClient = "2.9.0"
-sasGradlePlugins = "20260804.1151"
+sasGradlePlugins = "20260805.1534"
 tbd-libs = "20260702.1010"
 
 [libraries]
