@@ -20,37 +20,44 @@ import java.time.ZonedDateTime
 
 private val logger = LoggerFactory.getLogger("no.nav.helse.sparsom.App")
 
-internal class AktivitetDao(private val client: SearchClient) {
-    fun hentAktiviteterFor(ident: String): List<AktivitetDto> {
-        return runBlocking {
+internal class AktivitetDao(
+    private val client: SearchClient,
+) {
+    fun hentAktiviteterFor(ident: String): List<AktivitetDto> =
+        runBlocking {
             logger.debug("henter aktiviteter fra opensearch")
-            val response = client.search(aktivitetsloggIndexName, scroll = "2m") {
-                query = term("fødselsnummer", ident)
-                query = bool {
-                    should(
-                        term("fødselsnummer", ident),
-                        nested {
-                            path = "kontekster"
-                            query = term("kontekster.aktørId", ident)
+            val response =
+                client.search(aktivitetsloggIndexName, scroll = "2m") {
+                    query = term("fødselsnummer", ident)
+                    query =
+                        bool {
+                            should(
+                                term("fødselsnummer", ident),
+                                nested {
+                                    path = "kontekster"
+                                    query = term("kontekster.aktørId", ident)
+                                },
+                            )
                         }
-                    )
                 }
-            }
             logger.debug("mapper aktiviteter fra opensearch")
-            client.scroll(response).concurrentMap {
-                it.mapTilAktivitetDto()
-            }.toList().also {
-                logger.debug("aktiviteter mappet til liste")
-            }
+            client
+                .scroll(response)
+                .concurrentMap {
+                    it.mapTilAktivitetDto()
+                }.toList()
+                .also {
+                    logger.debug("aktiviteter mappet til liste")
+                }
         }
-    }
 
     // https://stackoverflow.com/a/76510232/218423
-    private inline fun <T, R> Flow<T>.concurrentMap(crossinline transform: suspend (T) -> R): Flow<R> = channelFlow {
-        collect { item ->
-            launch { send(transform(item)) }
+    private inline fun <T, R> Flow<T>.concurrentMap(crossinline transform: suspend (T) -> R): Flow<R> =
+        channelFlow {
+            collect { item ->
+                launch { send(transform(item)) }
+            }
         }
-    }
 
     private fun SearchResponse.Hit.mapTilAktivitetDto() =
         objectMapper.readTree(source.toString()).let { row ->
@@ -59,14 +66,16 @@ internal class AktivitetDao(private val client: SearchClient) {
                 tidsstempel = ZonedDateTime.parse(row.path("tidsstempel").asText()).toLocalDateTime(),
                 nivå = NivåDto.valueOf(row.path("nivå").asText()),
                 tekst = row.path("melding").asText(),
-                kontekster = row.path("kontekster").associate { kontekst ->
-                    kontekst as ObjectNode
-                    val konteksttype = kontekst.remove("konteksttype").asText()
-                    val detaljer = kontekst.fields().asSequence().associate { (k, v) ->
-                        k to v.asText()
-                    }
-                    konteksttype to detaljer
-                }
+                kontekster =
+                    row.path("kontekster").associate { kontekst ->
+                        kontekst as ObjectNode
+                        val konteksttype = kontekst.remove("konteksttype").asText()
+                        val detaljer =
+                            kontekst.fields().asSequence().associate { (k, v) ->
+                                k to v.asText()
+                            }
+                        konteksttype to detaljer
+                    },
             )
         }
 
@@ -80,7 +89,7 @@ data class AktivitetDto(
     val tidsstempel: LocalDateTime,
     val nivå: NivåDto,
     val tekst: String,
-    val kontekster: Map<String, Map<String, String>>
+    val kontekster: Map<String, Map<String, String>>,
 )
 
 enum class NivåDto {
@@ -88,5 +97,5 @@ enum class NivåDto {
     BEHOV,
     VARSEL,
     FUNKSJONELL_FEIL,
-    LOGISK_FEIL;
+    LOGISK_FEIL,
 }

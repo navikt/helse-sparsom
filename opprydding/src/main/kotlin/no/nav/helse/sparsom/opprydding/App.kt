@@ -21,9 +21,10 @@ private val sikkerLogg = LoggerFactory.getLogger("tjenestekall")
 fun main() {
     val env = System.getenv()
 
-    val app = RapidApplication.create(env).apply {
-        Opprydding(this, openSearchClient(env))
-    }
+    val app =
+        RapidApplication.create(env).apply {
+            Opprydding(this, openSearchClient(env))
+        }
 
     app.start()
 }
@@ -36,23 +37,31 @@ private fun openSearchClient(env: Map<String, String>): SearchClient {
             https = uri.scheme.lowercase() == "https",
             port = uri.port,
             user = env.getValue("OPEN_SEARCH_USERNAME"),
-            password = env.getValue("OPEN_SEARCH_PASSWORD")
-        )
+            password = env.getValue("OPEN_SEARCH_PASSWORD"),
+        ),
     )
 }
 
-
-private class Opprydding(rapidsConnection: RapidsConnection, private val searchClient: SearchClient) : River.PacketListener {
+private class Opprydding(
+    rapidsConnection: RapidsConnection,
+    private val searchClient: SearchClient,
+) : River.PacketListener {
     init {
-        River(rapidsConnection).apply {
-            precondition { it.requireValue("@event_name", "slett_person") }
-            validate {
-                it.requireKey("@id", "fødselsnummer")
-            }
-        }.register(this)
+        River(rapidsConnection)
+            .apply {
+                precondition { it.requireValue("@event_name", "slett_person") }
+                validate {
+                    it.requireKey("@id", "fødselsnummer")
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         val ident = packet["fødselsnummer"].asText()
         runBlocking {
             searchClient.deleteByQuery("aktivitetslogg") {

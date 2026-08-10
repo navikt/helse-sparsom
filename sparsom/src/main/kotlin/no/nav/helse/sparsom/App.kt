@@ -25,11 +25,13 @@ private fun createApp(env: Map<String, String>): RapidsConnection {
 
 private fun openSearchClient(env: Map<String, String>): SearchClient {
     val uri = URI(env.getValue("OPEN_SEARCH_URI"))
-    return SearchClient(KtorRestClient(
-        host = uri.host,
-        https = uri.scheme.lowercase()== "https",
-        port = uri.port,
-        user = env.getValue("OPEN_SEARCH_USERNAME"),
-        password = env.getValue("OPEN_SEARCH_PASSWORD")
-    ))
+    return SearchClient(
+        KtorRestClient(
+            host = uri.host,
+            https = uri.scheme.lowercase() == "https",
+            port = uri.port,
+            user = env.getValue("OPEN_SEARCH_USERNAME"),
+            password = env.getValue("OPEN_SEARCH_PASSWORD"),
+        ),
+    )
 }

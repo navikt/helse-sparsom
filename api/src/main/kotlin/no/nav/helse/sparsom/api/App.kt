@@ -19,13 +19,16 @@ import no.nav.helse.sparsom.api.config.ApplicationConfiguration
 import no.nav.helse.sparsom.api.config.AzureAdAppConfig
 import org.slf4j.LoggerFactory
 
-internal val objectMapper = jacksonObjectMapper()
-    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-    .registerModule(JavaTimeModule())
-    .setDefaultPrettyPrinter(DefaultPrettyPrinter().apply {
-        indentArraysWith(DefaultPrettyPrinter.FixedSpaceIndenter.instance)
-        indentObjectsWith(DefaultIndenter("  ", "\n"))
-    })
+internal val objectMapper =
+    jacksonObjectMapper()
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        .registerModule(JavaTimeModule())
+        .setDefaultPrettyPrinter(
+            DefaultPrettyPrinter().apply {
+                indentArraysWith(DefaultPrettyPrinter.FixedSpaceIndenter.instance)
+                indentObjectsWith(DefaultIndenter("  ", "\n"))
+            },
+        )
 
 fun main() {
     val config = ApplicationConfiguration()
@@ -33,25 +36,27 @@ fun main() {
     app.start(wait = true)
 }
 
-internal fun createApp(azureConfig: AzureAdAppConfig, searchClient: SearchClient) =
-    naisApp(
-        meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM),
-        objectMapper = objectMapper,
-        applicationLogger = LoggerFactory.getLogger(::main::class.java),
-        callLogger = LoggerFactory.getLogger("tjenestekall"),
-        timersConfig = { call, _ ->
-            this
-                .tag("azp_name", call.principal<JWTPrincipal>()?.get("azp_name") ?: "n/a")
-                // https://github.com/linkerd/polixy/blob/main/DESIGN.md#l5d-client-id-client-id
-                // eksempel: <APP>.<NAMESPACE>.serviceaccount.identity.linkerd.cluster.local
-                .tag("konsument", call.request.header("L5d-Client-Id") ?: "n/a")
-        },
-        mdcEntries = mapOf(
+internal fun createApp(
+    azureConfig: AzureAdAppConfig,
+    searchClient: SearchClient,
+) = naisApp(
+    meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM),
+    objectMapper = objectMapper,
+    applicationLogger = LoggerFactory.getLogger(::main::class.java),
+    callLogger = LoggerFactory.getLogger("tjenestekall"),
+    timersConfig = { call, _ ->
+        this
+            .tag("azp_name", call.principal<JWTPrincipal>()?.get("azp_name") ?: "n/a")
+            // https://github.com/linkerd/polixy/blob/main/DESIGN.md#l5d-client-id-client-id
+            // eksempel: <APP>.<NAMESPACE>.serviceaccount.identity.linkerd.cluster.local
+            .tag("konsument", call.request.header("L5d-Client-Id") ?: "n/a")
+    },
+    mdcEntries =
+        mapOf(
             "azp_name" to { call: ApplicationCall -> call.principal<JWTPrincipal>()?.get("azp_name") },
-            "konsument" to { call: ApplicationCall -> call.request.header("L5d-Client-Id") }
+            "konsument" to { call: ApplicationCall -> call.request.header("L5d-Client-Id") },
         ),
-    ) {
-        azureAdAppAuthentication(azureConfig)
-        api(searchClient, API_SERVICE)
-    }
-
+) {
+    azureAdAppAuthentication(azureConfig)
+    api(searchClient, API_SERVICE)
+}
