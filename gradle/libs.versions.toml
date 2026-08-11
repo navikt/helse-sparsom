@@ -1,7 +1,7 @@
 [versions]
 opensearchClient = "2.9.0"
 sasGradlePlugins = "20260807.0944"
-tbd-libs = "20260702.1010"
+tbd-libs = "20260811.1310"
 
 [libraries]
 jackson-datatype-jsr310 = { group = "com.fasterxml.jackson.datatype", name = "jackson-datatype-jsr310" }
