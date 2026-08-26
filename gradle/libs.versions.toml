@@ -9,7 +9,7 @@ jackson-module-kotlin = { group = "com.fasterxml.jackson.module", name = "jackso
 ktor-server-auth-jwt = { group = "io.ktor", name = "ktor-server-auth-jwt" }
 logback-classic = "ch.qos.logback:logback-classic:1.6.3"
 logback-logstash-encoder = "net.logstash.logback:logstash-logback-encoder:9.0"
-rapids-and-rivers = "com.github.navikt:rapids-and-rivers:2026011411051768385145.e8ebad1177b4"
+rapids-and-rivers = "com.github.navikt:rapids-and-rivers:2026071513121784113927"
 search-client = { module = "com.jillesvangurp:search-client", version.ref = "opensearchClient" }
 tbd-libs-naisful-app = { module = "com.github.navikt.tbd-libs:naisful-app", version.ref = "tbd-libs" }
 
