@@ -78,8 +78,8 @@ internal class AktivitetRiver(
                                     }
                             }
                         } catch (err: Exception) {
-                            sikkerlogg.error("kan ikke lagre til opensearch: {}", err.message, err)
-                            logger.error("kan ikke lagre til opensearch: {}", err.message, err)
+                            logger.error("lagring til opensearch feilet for hendelse med ID {}, se sikkerlogg for detaljer", hendelseId)
+                            sikkerlogg.error("lagring til opensearch feilet: {}", err.message, err)
                             throw err
                         }
                     }
