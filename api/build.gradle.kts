@@ -13,6 +13,7 @@ dependencies {
         exclude(group = "junit")
     }
     implementation(libs.search.client)
+    implementation(libs.sykepengerLibs.logging)
     implementation(libs.logback.classic)
     implementation(libs.logback.logstash.encoder) {
         exclude("com.fasterxml.jackson.core")

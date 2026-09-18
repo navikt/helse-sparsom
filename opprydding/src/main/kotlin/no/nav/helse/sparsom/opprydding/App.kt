@@ -12,11 +12,8 @@ import com.jillesvangurp.searchdsls.querydsl.term
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.rapids_rivers.*
-import org.slf4j.LoggerFactory
+import no.nav.sykepenger.libs.logging.loggInfo
 import java.net.URI
-
-private val log = LoggerFactory.getLogger("no.nav.helse.sparsom.opprydding.App")
-private val sikkerLogg = LoggerFactory.getLogger("tjenestekall")
 
 fun main() {
     val env = System.getenv()
@@ -68,7 +65,6 @@ private class Opprydding(
                 query = term("fødselsnummer", ident)
             }
         }
-        log.info("sletter testdata for testperson $ident")
-        sikkerLogg.info("sletter testdata for testperson $ident")
+        loggInfo("Sletter testdata for testperson", "identitetsnummer" to ident)
     }
 }

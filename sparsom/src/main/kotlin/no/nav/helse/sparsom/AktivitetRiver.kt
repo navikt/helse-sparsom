@@ -9,7 +9,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
-import com.github.navikt.tbd_libs.rapids_and_rivers.withMDC
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
@@ -18,8 +17,9 @@ import com.jillesvangurp.ktsearch.SearchClient
 import com.jillesvangurp.ktsearch.bulk
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.runBlocking
-import net.logstash.logback.argument.StructuredArguments.keyValue
-import org.slf4j.LoggerFactory
+import no.nav.sykepenger.libs.logging.MdcKey
+import no.nav.sykepenger.libs.logging.medMdc
+import no.nav.sykepenger.libs.logging.navngittLogger
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -55,11 +55,7 @@ internal class AktivitetRiver(
         meterRegistry: MeterRegistry,
     ) {
         val hendelseId = UUID.fromString(packet["@id"].asText())
-        withMDC(
-            mapOf(
-                "hendelseId" to hendelseId.toString(),
-            ),
-        ) {
+        medMdc(MdcKey.MELDING_ID to hendelseId.toString()) {
             val tidBrukt =
                 measureTimeMillis {
                     runBlocking {
@@ -71,20 +67,19 @@ internal class AktivitetRiver(
                                             id = it.id,
                                             source =
                                                 objectMapper.writeValueAsString(it).also { json ->
-                                                    sikkerlogg.info("skriver dokument til opensearch:\n$json")
+                                                    logger.info("Skriver dokument til opensearch", "dokument" to json)
                                                 },
                                             index = opensearchIndexnavn,
                                         )
                                     }
                             }
                         } catch (err: Exception) {
-                            logger.error("lagring til opensearch feilet for hendelse med ID {}, se sikkerlogg for detaljer", hendelseId)
-                            sikkerlogg.error("lagring til opensearch feilet: {}", err.message, err)
+                            logger.error("Lagring til opensearch feilet", err)
                             throw err
                         }
                     }
                 }
-            logger.info("lagrer aktiviteter fra hendelse {}. Tid brukt: ${tidBrukt}ms", keyValue("meldingsreferanseId", hendelseId))
+            logger.info("Lagret aktiviteter fra hendelse", "tidBruktMs" to tidBrukt.toString())
         }
     }
 
@@ -125,8 +120,7 @@ internal class AktivitetRiver(
             jacksonObjectMapper()
                 .registerModule(JavaTimeModule())
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        private val logger = LoggerFactory.getLogger(AktivitetRiver::class.java)
-        private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
+        private val logger = navngittLogger("no.nav.helse.sparsom.AktivitetRiver")
     }
 }
 

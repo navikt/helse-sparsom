@@ -14,11 +14,11 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.sparsom.api.objectMapper
-import org.slf4j.LoggerFactory
+import no.nav.sykepenger.libs.logging.navngittLogger
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
-private val logger = LoggerFactory.getLogger("no.nav.helse.sparsom.App")
+private val logger = navngittLogger("no.nav.helse.sparsom.api.dao.AktivitetDao")
 
 internal class AktivitetDao(
     private val client: SearchClient,

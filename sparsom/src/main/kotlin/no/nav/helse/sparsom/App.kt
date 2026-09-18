@@ -4,12 +4,9 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import com.jillesvangurp.ktsearch.KtorRestClient
 import com.jillesvangurp.ktsearch.SearchClient
 import no.nav.helse.rapids_rivers.RapidApplication
-import org.slf4j.LoggerFactory
 import java.net.URI
 
 const val opensearchIndexnavn = "aktivitetslogg"
-
-private val log = LoggerFactory.getLogger("no.nav.helse.sparsom.App")
 
 fun main() {
     val app = createApp(System.getenv())

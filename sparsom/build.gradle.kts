@@ -10,6 +10,7 @@ sasDeployable {
 dependencies {
     implementation(libs.rapids.and.rivers)
     implementation(libs.search.client)
+    implementation(libs.sykepengerLibs.logging)
     implementation(libs.logback.classic)
     implementation(libs.logback.logstash.encoder) {
         exclude("com.fasterxml.jackson.core")
