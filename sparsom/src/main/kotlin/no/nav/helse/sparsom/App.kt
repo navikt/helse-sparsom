@@ -4,11 +4,16 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import com.jillesvangurp.ktsearch.KtorRestClient
 import com.jillesvangurp.ktsearch.SearchClient
 import no.nav.helse.rapids_rivers.RapidApplication
+import no.nav.sykepenger.libs.logging.navngittLogger
 import java.net.URI
 
 const val opensearchIndexnavn = "aktivitetslogg"
+private val logger = navngittLogger("no.nav.helse.sparsom.App")
 
 fun main() {
+    Thread.currentThread().setUncaughtExceptionHandler { _, e ->
+        logger.error("En exception boblet helt opp", e)
+    }
     val app = createApp(System.getenv())
     app.start()
 }
