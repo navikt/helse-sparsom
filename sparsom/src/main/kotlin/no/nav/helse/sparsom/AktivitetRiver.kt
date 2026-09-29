@@ -92,8 +92,7 @@ internal class AktivitetRiver(
                         val detaljer =
                             kontekst
                                 .path("kontekstmap")
-                                .fields()
-                                .asSequence()
+                                .properties()
                                 .associate { (key, value) -> key to value.asText() }
                         konteksttype to detaljer
                     }

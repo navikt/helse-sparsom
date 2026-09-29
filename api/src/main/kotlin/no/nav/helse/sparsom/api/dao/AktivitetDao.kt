@@ -71,7 +71,7 @@ internal class AktivitetDao(
                         kontekst as ObjectNode
                         val konteksttype = kontekst.remove("konteksttype").asText()
                         val detaljer =
-                            kontekst.fields().asSequence().associate { (k, v) ->
+                            kontekst.properties().associate { (k, v) ->
                                 k to v.asText()
                             }
                         konteksttype to detaljer
