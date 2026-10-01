@@ -1,6 +1,6 @@
 [versions]
 opensearchClient = "2.9.0"
-sasGradlePlugins = "20260930.1152"
+sykepengerGradlePlugins = "20261001.1830"
 sykepengerLibs = "20260829.1737"
 tbd-libs = "20260821.1252"
 
@@ -16,5 +16,5 @@ sykepengerLibs-logging = { module = "no.nav.sykepenger.libs:logging", version.re
 tbd-libs-naisful-app = { module = "com.github.navikt.tbd-libs:naisful-app", version.ref = "tbd-libs" }
 
 [plugins]
-sas-deployable = { id = "no.nav.helse.sas.sas-deployable", version.ref = "sasGradlePlugins" }
-sas-root = { id = "no.nav.helse.sas.sas-root", version.ref = "sasGradlePlugins" }
+sykepenger-deployable = { id = "no.nav.sykepenger.deployable", version.ref = "sykepengerGradlePlugins" }
+sykepenger-root = { id = "no.nav.sykepenger.root", version.ref = "sykepengerGradlePlugins" }
