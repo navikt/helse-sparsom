@@ -1,0 +1,17 @@
+spec:
+  replicas:
+    disableAutoScaling: true
+  preStopHook:
+    http:
+      path: /stop
+  resources:
+    limits:
+      memory: 1Gi
+  kafka:
+    pool: nav-prod
+  accessPolicy:
+    outbound:
+      external:
+        - host: opensearch-tbd-sparsom-nav-prod.a.aivencloud.com
+          ports:
+            - port: 26482
