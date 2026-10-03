@@ -1,4 +1,8 @@
 version: 2
+registries:
+  tryformation:
+    type: maven-repository
+    url: https://maven.tryformation.com/releases
 multi-ecosystem-groups:
   dependencies:
     schedule:
@@ -17,6 +21,8 @@ updates:
 
   - package-ecosystem: "gradle"
     directory: "/"
+    registries:
+      - tryformation
     multi-ecosystem-group: "dependencies"
     patterns: ["*"]
     cooldown:
