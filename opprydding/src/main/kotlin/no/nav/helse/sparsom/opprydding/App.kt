@@ -59,7 +59,7 @@ private class Opprydding(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val ident = packet["fødselsnummer"].asText()
+        val ident = packet["fødselsnummer"].asString()
         runBlocking {
             searchClient.deleteByQuery("aktivitetslogg") {
                 query = term("fødselsnummer", ident)
