@@ -21,7 +21,7 @@ internal val objectMapper =
     jacksonMapperBuilder()
         .defaultPrettyPrinter(
             DefaultPrettyPrinter()
-                .withArrayIndenter(DefaultPrettyPrinter.FixedSpaceIndenter.instance)
+                .withArrayIndenter(DefaultPrettyPrinter.FixedSpaceIndenter.instance())
                 .withObjectIndenter(DefaultIndenter("  ", "\n")),
         ).build()
 
