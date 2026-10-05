@@ -2,7 +2,7 @@
 opensearchClient = "2.9.0"
 sykepengerGradlePlugins = "20261001.1830"
 sykepengerLibs = "20261001.1823"
-tbd-libs = "20261002.1227"
+tbd-libs = "20261005.1432"
 
 [libraries]
 jackson-module-kotlin = { group = "tools.jackson.module", name = "jackson-module-kotlin" }
