@@ -2,10 +2,6 @@ package no.nav.helse.sparsom
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
@@ -20,6 +16,8 @@ import kotlinx.coroutines.runBlocking
 import no.nav.sykepenger.libs.logging.MdcKey
 import no.nav.sykepenger.libs.logging.medMdc
 import no.nav.sykepenger.libs.logging.navngittLogger
+import tools.jackson.databind.JsonNode
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -37,7 +35,7 @@ internal class AktivitetRiver(
                 validate {
                     it.requireKey("fødselsnummer", "@id", "@opprettet")
                     it.requireArray("aktiviteter") {
-                        require("id") { UUID.fromString(it.asText()) }
+                        require("id") { UUID.fromString(it.asString()) }
                         requireKey("nivå", "melding")
                         require("tidsstempel", JsonNode::asLocalDateTime)
                         requireArray("kontekster") {
@@ -54,7 +52,7 @@ internal class AktivitetRiver(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val hendelseId = UUID.fromString(packet["@id"].asText())
+        val hendelseId = UUID.fromString(packet["@id"].asString())
         medMdc(MdcKey.MELDING_ID to hendelseId.toString()) {
             val tidBrukt =
                 measureTimeMillis {
@@ -85,23 +83,24 @@ internal class AktivitetRiver(
 
     private fun tilOpenSearchAktiviteter(packet: JsonMessage): List<OpenSearchAktivitet> =
         packet["aktiviteter"]
+            .values()
             .map { aktivitet ->
                 val kontekster =
-                    aktivitet.path("kontekster").map { kontekst ->
-                        val konteksttype = kontekst.path("konteksttype").asText()
+                    aktivitet.path("kontekster").values().map { kontekst ->
+                        val konteksttype = kontekst.path("konteksttype").asString()
                         val detaljer =
                             kontekst
                                 .path("kontekstmap")
                                 .properties()
-                                .associate { (key, value) -> key to value.asText() }
+                                .associate { (key, value) -> key to value.asString() }
                         konteksttype to detaljer
                     }
                 OpenSearchAktivitet(
-                    id = aktivitet.path("id").asText(),
-                    fødselsnummer = packet["fødselsnummer"].asText(),
-                    nivå = aktivitet.path("nivå").asText(),
-                    melding = aktivitet.path("melding").asText(),
-                    tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asText()).atZone(ZoneId.systemDefault()),
+                    id = aktivitet.path("id").asString(),
+                    fødselsnummer = packet["fødselsnummer"].asString(),
+                    nivå = aktivitet.path("nivå").asString(),
+                    melding = aktivitet.path("melding").asString(),
+                    tidsstempel = LocalDateTime.parse(aktivitet.path("tidsstempel").asString()).atZone(ZoneId.systemDefault()),
                     kontekster =
                         kontekster.map { (konteksttype, detaljer) ->
                             detaljer + mapOf("konteksttype" to konteksttype)
@@ -110,15 +109,12 @@ internal class AktivitetRiver(
                         kontekster.fold(emptyMap()) { resultat, (_, detaljer) ->
                             resultat + detaljer
                         },
-                    varselkode = aktivitet.path("varselkode").takeIf(JsonNode::isTextual)?.asText(),
+                    varselkode = aktivitet.path("varselkode").takeIf(JsonNode::isString)?.asString(),
                 )
             }
 
     private companion object {
-        private val objectMapper =
-            jacksonObjectMapper()
-                .registerModule(JavaTimeModule())
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        private val objectMapper = jacksonObjectMapper()
         private val logger = navngittLogger("no.nav.helse.sparsom.AktivitetRiver")
     }
 }

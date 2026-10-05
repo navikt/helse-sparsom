@@ -5,8 +5,7 @@ sykepengerLibs = "20261001.1823"
 tbd-libs = "20261002.1227"
 
 [libraries]
-jackson-datatype-jsr310 = { group = "com.fasterxml.jackson.datatype", name = "jackson-datatype-jsr310" }
-jackson-module-kotlin = { group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin" }
+jackson-module-kotlin = { group = "tools.jackson.module", name = "jackson-module-kotlin" }
 ktor-server-auth-jwt = { group = "io.ktor", name = "ktor-server-auth-jwt" }
 logback-classic = "ch.qos.logback:logback-classic:1.6.4"
 logback-logstash-encoder = "net.logstash.logback:logstash-logback-encoder:9.0"

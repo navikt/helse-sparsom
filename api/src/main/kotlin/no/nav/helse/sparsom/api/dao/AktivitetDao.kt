@@ -1,6 +1,5 @@
 package no.nav.helse.sparsom.api.dao
 
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.jillesvangurp.ktsearch.SearchClient
 import com.jillesvangurp.ktsearch.SearchResponse
 import com.jillesvangurp.ktsearch.scroll
@@ -15,6 +14,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.sparsom.api.objectMapper
 import no.nav.sykepenger.libs.logging.navngittLogger
+import tools.jackson.databind.node.ObjectNode
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
@@ -63,16 +63,16 @@ internal class AktivitetDao(
         objectMapper.readTree(source.toString()).let { row ->
             AktivitetDto(
                 id = row.path("id").asLong(),
-                tidsstempel = ZonedDateTime.parse(row.path("tidsstempel").asText()).toLocalDateTime(),
-                nivå = NivåDto.valueOf(row.path("nivå").asText()),
-                tekst = row.path("melding").asText(),
+                tidsstempel = ZonedDateTime.parse(row.path("tidsstempel").asString()).toLocalDateTime(),
+                nivå = NivåDto.valueOf(row.path("nivå").asString()),
+                tekst = row.path("melding").asString(),
                 kontekster =
                     row.path("kontekster").associate { kontekst ->
                         kontekst as ObjectNode
-                        val konteksttype = kontekst.remove("konteksttype").asText()
+                        val konteksttype = kontekst.remove("konteksttype").asString()
                         val detaljer =
                             kontekst.properties().associate { (k, v) ->
-                                k to v.asText()
+                                k to v.asString()
                             }
                         konteksttype to detaljer
                     },
