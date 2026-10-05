@@ -1,10 +1,5 @@
 package no.nav.helse.sparsom.api
 
-import com.fasterxml.jackson.core.util.DefaultIndenter
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.navikt.tbd_libs.naisful.naisApp
 import com.jillesvangurp.ktsearch.SearchClient
 import io.ktor.server.application.ApplicationCall
@@ -18,17 +13,17 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.helse.sparsom.api.config.ApplicationConfiguration
 import no.nav.helse.sparsom.api.config.AzureAdAppConfig
 import org.slf4j.LoggerFactory
+import tools.jackson.core.util.DefaultIndenter
+import tools.jackson.core.util.DefaultPrettyPrinter
+import tools.jackson.module.kotlin.jacksonMapperBuilder
 
 internal val objectMapper =
-    jacksonObjectMapper()
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        .registerModule(JavaTimeModule())
-        .setDefaultPrettyPrinter(
-            DefaultPrettyPrinter().apply {
-                indentArraysWith(DefaultPrettyPrinter.FixedSpaceIndenter.instance)
-                indentObjectsWith(DefaultIndenter("  ", "\n"))
-            },
-        )
+    jacksonMapperBuilder()
+        .defaultPrettyPrinter(
+            DefaultPrettyPrinter()
+                .withArrayIndenter(DefaultPrettyPrinter.FixedSpaceIndenter.instance)
+                .withObjectIndenter(DefaultIndenter("  ", "\n")),
+        ).build()
 
 fun main() {
     val config = ApplicationConfiguration()

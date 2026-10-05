@@ -2,11 +2,11 @@ package no.nav.helse.sparsom.api.config
 
 import com.auth0.jwk.JwkProvider
 import com.auth0.jwk.JwkProviderBuilder
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.jillesvangurp.ktsearch.KtorRestClient
 import com.jillesvangurp.ktsearch.SearchClient
 import io.ktor.server.auth.jwt.*
+import tools.jackson.databind.JsonNode
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URI
@@ -46,8 +46,8 @@ internal class AzureAdAppConfig(
 
     init {
         configurationUrl.getJson().also {
-            this.issuer = it["issuer"].textValue()
-            this.jwksUri = it["jwks_uri"].textValue()
+            this.issuer = it["issuer"].stringValue()
+            this.jwksUri = it["jwks_uri"].stringValue()
         }
 
         jwkProvider = JwkProviderBuilder(URI(this.jwksUri).toURL()).build()
