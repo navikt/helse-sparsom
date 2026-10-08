@@ -7,7 +7,7 @@ tbd-libs = "20261005.1432"
 [libraries]
 jackson-module-kotlin = { group = "tools.jackson.module", name = "jackson-module-kotlin" }
 ktor-server-auth-jwt = { group = "io.ktor", name = "ktor-server-auth-jwt" }
-logback-classic = "ch.qos.logback:logback-classic:1.6.4"
+logback-classic = "ch.qos.logback:logback-classic:1.6.5"
 logback-logstash-encoder = "net.logstash.logback:logstash-logback-encoder:9.0"
 rapids-and-rivers = "com.github.navikt:rapids-and-rivers:2026091610031789545782"
 search-client = { module = "com.jillesvangurp:search-client", version.ref = "opensearchClient" }
