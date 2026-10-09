@@ -62,7 +62,7 @@ internal class AktivitetDao(
     private fun SearchResponse.Hit.mapTilAktivitetDto() =
         objectMapper.readTree(source.toString()).let { row ->
             AktivitetDto(
-                id = row.path("id").asLong(),
+                id = row.path("id").asString(),
                 tidsstempel = ZonedDateTime.parse(row.path("tidsstempel").asString()).toLocalDateTime(),
                 nivå = NivåDto.valueOf(row.path("nivå").asString()),
                 tekst = row.path("melding").asString(),
@@ -85,7 +85,7 @@ internal class AktivitetDao(
 }
 
 data class AktivitetDto(
-    val id: Long,
+    val id: String,
     val tidsstempel: LocalDateTime,
     val nivå: NivåDto,
     val tekst: String,
