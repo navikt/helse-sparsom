@@ -29,6 +29,7 @@ spec:
     inbound:
       rules:
         - application: spanner
+        - application: speil
     outbound:
       rules:
         - application: logging
