@@ -19,7 +19,6 @@ internal fun Application.api(
         authenticate(authProviderName) {
             post("/api/aktiviteter") {
                 withContext(Dispatchers.IO) {
-                    application.log.debug("henter ident fra spurtedu")
                     val request = call.receive<AktiviteterRequest>()
                     call.respond(mapOf("aktiviteter" to dao.hentAktiviteterFor(request.ident)))
                 }
