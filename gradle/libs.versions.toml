@@ -1,8 +1,8 @@
 [versions]
 opensearchClient = "2.9.0"
-sykepengerGradlePlugins = "20261001.1830"
-sykepengerLibs = "20261001.1823"
-tbd-libs = "20261005.1432"
+sykepengerGradlePlugins = "20261013.1718"
+sykepengerLibs = "20261013.1719"
+tbd-libs = "20261013.1613"
 
 [libraries]
 jackson-module-kotlin = { group = "tools.jackson.module", name = "jackson-module-kotlin" }
