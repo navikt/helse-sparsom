@@ -5,6 +5,7 @@ import com.jillesvangurp.ktsearch.SearchResponse
 import com.jillesvangurp.ktsearch.scroll
 import com.jillesvangurp.ktsearch.search
 import com.jillesvangurp.searchdsls.querydsl.bool
+import com.jillesvangurp.searchdsls.querydsl.matchPhrase
 import com.jillesvangurp.searchdsls.querydsl.nested
 import com.jillesvangurp.searchdsls.querydsl.term
 import kotlinx.coroutines.flow.Flow
@@ -17,19 +18,22 @@ import no.nav.sykepenger.libs.logging.navngittLogger
 import tools.jackson.databind.node.ObjectNode
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
+import java.util.UUID
 
 private val logger = navngittLogger("no.nav.helse.sparsom.api.dao.AktivitetDao")
 
 internal class AktivitetDao(
     private val client: SearchClient,
 ) {
-    fun hentAktiviteterFor(ident: String): List<AktivitetDto> =
+    fun hentAktiviteterFor(
+        ident: String,
+        vedtaksperiodeId: UUID? = null,
+    ): List<AktivitetDto> =
         runBlocking {
             logger.debug("henter aktiviteter fra opensearch")
             val response =
                 client.search(aktivitetsloggIndexName, scroll = "2m") {
-                    query = term("fødselsnummer", ident)
-                    query =
+                    val gjelderIdent =
                         bool {
                             should(
                                 term("fødselsnummer", ident),
@@ -38,6 +42,15 @@ internal class AktivitetDao(
                                     query = term("kontekster.aktørId", ident)
                                 },
                             )
+                        }
+                    query =
+                        if (vedtaksperiodeId == null) {
+                            gjelderIdent
+                        } else {
+                            bool {
+                                // match_phrase treffer eksakt både om feltet er mappet som keyword og som text
+                                filter(gjelderIdent, matchPhrase("vedtaksperiodeId", vedtaksperiodeId.toString()))
+                            }
                         }
                 }
             logger.debug("mapper aktiviteter fra opensearch")

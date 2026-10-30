@@ -9,6 +9,7 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import no.nav.helse.sparsom.api.dao.AktivitetDao
+import java.util.UUID
 
 internal fun Application.api(
     searchClient: SearchClient,
@@ -20,7 +21,7 @@ internal fun Application.api(
             post("/api/aktiviteter") {
                 withContext(Dispatchers.IO) {
                     val request = call.receive<AktiviteterRequest>()
-                    call.respond(mapOf("aktiviteter" to dao.hentAktiviteterFor(request.ident)))
+                    call.respond(mapOf("aktiviteter" to dao.hentAktiviteterFor(request.ident, request.vedtaksperiodeId)))
                 }
             }
         }
@@ -29,6 +30,7 @@ internal fun Application.api(
 
 private data class AktiviteterRequest(
     val ident: String,
+    val vedtaksperiodeId: UUID? = null,
 )
 
 private fun ApplicationCall.ident(): String? = queryParam("ident").firstNotNullOfOrNull(::numericalOnlyOrNull)
