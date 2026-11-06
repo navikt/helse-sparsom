@@ -1,7 +1,7 @@
 [versions]
 opensearchClient = "2.9.0"
 sykepengerGradlePlugins = "20261029.1945"
-sykepengerLibs = "20261029.1851"
+sykepengerLibs = "20261106.1049"
 tbd-libs = "20261029.1843"
 
 [libraries]
