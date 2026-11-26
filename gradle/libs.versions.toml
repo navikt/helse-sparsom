@@ -7,9 +7,9 @@ tbd-libs = "20261125.1015"
 [libraries]
 jackson-module-kotlin = { group = "tools.jackson.module", name = "jackson-module-kotlin" }
 ktor-server-auth-jwt = { group = "io.ktor", name = "ktor-server-auth-jwt" }
-logback-classic = "ch.qos.logback:logback-classic:1.6.7"
+logback-classic = "ch.qos.logback:logback-classic:1.6.8"
 logback-logstash-encoder = "net.logstash.logback:logstash-logback-encoder:9.0"
-rapids-and-rivers = "com.github.navikt:rapids-and-rivers:2026110308421793691732"
+rapids-and-rivers = "com.github.navikt:rapids-and-rivers:2026111908531795074794"
 search-client = { module = "com.jillesvangurp:search-client", version.ref = "opensearchClient" }
 sykepengerLibs-logging = { module = "no.nav.sykepenger.libs:logging", version.ref = "sykepengerLibs" }
 tbd-libs-naisful-app = { module = "com.github.navikt.tbd-libs:naisful-app", version.ref = "tbd-libs" }
